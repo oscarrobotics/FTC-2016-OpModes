@@ -92,8 +92,8 @@ public class TeleOp extends BaseOp {
         }
 
         if( Math.abs(rightMot- right) > rampRate){
-            leftFront.setPower((rightMot+ Math.signum( (right- rightMot)* rampRate) ) );
-            leftBack.setPower((rightMot+ Math.signum( (right- rightMot)* rampRate) ) );
+            rightFront.setPower((rightMot+ Math.signum( (right- rightMot)* rampRate) ) );
+            rightBack.setPower((rightMot+ Math.signum( (right- rightMot)* rampRate) ) );
         }
         else{
             rightFront.setPower(right);
@@ -120,10 +120,10 @@ public class TeleOp extends BaseOp {
 
     public void Collect() {
         if (gamepad1.a || gamepad2.a  ) {
-            collector.setPower(.75);
+            collector.setPower(-.75);
         }
         else if (gamepad1.a || gamepad2.a == false ) {
-            collector.setPower(-.75);
+            collector.setPower(.75);
         }
 
 
