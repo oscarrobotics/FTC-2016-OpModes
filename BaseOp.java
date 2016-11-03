@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
+import com.qualcomm.robotcore.hardware.AnalogInput;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorController;
@@ -26,6 +27,7 @@ public class BaseOp extends OpMode {
     Servo loader;
     Servo buttonPress;
     ColorSensor redBlueSensor;
+    AnalogInput odSensor;
     public void init() //starts of the code, runs once
     {
 
@@ -74,6 +76,7 @@ public class BaseOp extends OpMode {
         leftFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         leftBack.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         shooter.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
 
     }
 

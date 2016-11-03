@@ -8,16 +8,18 @@ import org.firstinspires.ftc.teamcode.BaseOp;
 @com.qualcomm.robotcore.eventloop.opmode.Autonomous(name = "Oscar: Autonomous Tank", group = "Oscar")
 public class AutonomousOp extends BaseOp {
     // public int rightFrontEncoderTarget= 5000;
-    public int position = shooter.getCurrentPosition();
+    public int position;
 
     @Override
     public void init() {
         super.init();
+        position = shooter.getCurrentPosition();
         rightFront.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER); //sets the encoders to zero
         rightBack.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         leftFront.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         leftBack.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         shooter.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
 
         int rightFrontEncoderTarget = 5000;
         int rightBackEncoderTarget = 5000;

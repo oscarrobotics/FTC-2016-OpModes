@@ -80,27 +80,16 @@ public class TeleOp extends BaseOp {
     }
 
     public void RobotDrive() {
-        Double left = Math.pow(gamepad1.left_stick_y, 3),
-                right = Math.pow(gamepad1.right_stick_y, 3),
-                leftMot = leftFront.getPower(),
-                rightMot = rightFront.getPower(),
-                rampRate = 0.2;
-        if (Math.abs(leftMot - left) > rampRate) {
-            leftFront.setPower((leftMot + Math.signum((left - leftMot) * rampRate)));
-            leftBack.setPower((leftMot + Math.signum((left - leftMot) * rampRate)));
-        } else {
-            leftFront.setPower(left);
-            leftBack.setPower(left);
-        }
 
-        if (Math.abs(rightMot - right) > rampRate) {
-            rightFront.setPower((rightMot + Math.signum((right - rightMot) * rampRate)));
-            rightBack.setPower((rightMot + Math.signum((right - rightMot) * rampRate)));
-        } else {
-            rightFront.setPower(right);
-            rightBack.setPower(right);
-        }
+        double leftPower = gamepad1.left_stick_y;
+        double rightPower = gamepad1.right_stick_y;
+        leftPower = Math.pow(leftPower, 3);
+        rightPower = Math.pow(rightPower, 3);
 
+        rightFront.setPower(rightPower);
+        leftFront.setPower(leftPower);
+        leftBack.setPower(leftPower);
+        rightBack.setPower(rightPower);
 
     }
 
@@ -150,10 +139,10 @@ public class TeleOp extends BaseOp {
             collector.setPower(0.0);
         }
         else if (gamepad2.a) {
-            collector.setPower(-.75);
+            collector.setPower(1.0);
         }
         else {
-            collector.setPower(.75);
+            collector.setPower(-1.0);
         }
     }
 }
