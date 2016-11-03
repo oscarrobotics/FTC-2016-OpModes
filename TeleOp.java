@@ -40,7 +40,9 @@ public class TeleOp extends BaseOp {
         Shoot();
 
         // ShootEnc();
-         Collect();
+        Collect();
+        Load();
+        ButtonPress();
         updateTelemetry(telemetry);              //sends feedback
 
     }
@@ -76,57 +78,83 @@ public class TeleOp extends BaseOp {
 
 
     }
-    public void RobotDrive(){
-        Double left = Math.pow(gamepad1.left_stick_y,3 ),
-                right = Math.pow(gamepad1.right_stick_y,3),
-                leftMot= leftFront.getPower(),
-                rightMot= rightFront.getPower(),
-                rampRate= 0.2;
-        if( Math.abs(leftMot- left) > rampRate){
-            leftFront.setPower((leftMot+ Math.signum( (left- leftMot)* rampRate) ) );
-            leftBack.setPower((leftMot+ Math.signum( (left- leftMot)* rampRate) ) );
-        }
-        else{
+
+    public void RobotDrive() {
+        Double left = Math.pow(gamepad1.left_stick_y, 3),
+                right = Math.pow(gamepad1.right_stick_y, 3),
+                leftMot = leftFront.getPower(),
+                rightMot = rightFront.getPower(),
+                rampRate = 0.2;
+        if (Math.abs(leftMot - left) > rampRate) {
+            leftFront.setPower((leftMot + Math.signum((left - leftMot) * rampRate)));
+            leftBack.setPower((leftMot + Math.signum((left - leftMot) * rampRate)));
+        } else {
             leftFront.setPower(left);
             leftBack.setPower(left);
         }
 
-        if( Math.abs(rightMot- right) > rampRate){
-            rightFront.setPower((rightMot+ Math.signum( (right- rightMot)* rampRate) ) );
-            rightBack.setPower((rightMot+ Math.signum( (right- rightMot)* rampRate) ) );
-        }
-        else{
+        if (Math.abs(rightMot - right) > rampRate) {
+            rightFront.setPower((rightMot + Math.signum((right - rightMot) * rampRate)));
+            rightBack.setPower((rightMot + Math.signum((right - rightMot) * rampRate)));
+        } else {
             rightFront.setPower(right);
             rightBack.setPower(right);
         }
-
-
 
 
     }
 
 
     public void Shoot() {
-        if (gamepad1.right_trigger > 0.5) {
-            shooter.setPower(.5);
+        if (gamepad2.right_trigger > 0.5) {
+            shooter.setPower(1.0);
         } else
             shooter.setPower(0.0);
     }
 
+    /*
     public void ShootEnc() {
         if (gamepad1.right_trigger > 0.5)
             shooter.setTargetPosition(1120 + shooter.getCurrentPosition());
     }
+    */
 
-    public void Collect() {
-        if (gamepad1.a || gamepad2.a  ) {
+    public void Load() { // loader servo
+        if (gamepad2.dpad_down) {
+            loader.setPosition(.5);
+        } else {
+            loader.setPosition(0.15);
+
+        }
+    }
+
+
+
+
+    public void ButtonPress() {
+        if (gamepad2.dpad_right){
+            buttonPress.setPosition(0.0);
+        }
+
+        else if (gamepad2.dpad_left){
+            buttonPress.setPosition(1.0);
+        }
+
+        else{
+            buttonPress.setPosition(.5);
+        }
+    }
+
+    public void Collect() { // big spinny foam dude
+        if (gamepad2.b) {
+            collector.setPower(0.0);
+        }
+        else if (gamepad2.a) {
             collector.setPower(-.75);
         }
-        else if (gamepad1.a || gamepad2.a == false ) {
+        else {
             collector.setPower(.75);
         }
-
-
     }
 }
 

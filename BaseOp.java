@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
+import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorController;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
@@ -22,6 +23,9 @@ public class BaseOp extends OpMode {
     DcMotor leftBack;
     DcMotor shooter;
     DcMotor collector;
+    Servo loader;
+    Servo buttonPress;
+    ColorSensor redBlueSensor;
     public void init() //starts of the code, runs once
     {
 
@@ -31,7 +35,6 @@ public class BaseOp extends OpMode {
 
         shooter = hardwareMap.dcMotor.get("shooter"); //tells the robot what the hardware is calling it
         shooter.setDirection(DcMotor.Direction.FORWARD); // sets the direction
-
 
         collector = hardwareMap.dcMotor.get("collector"); //tells the robot what the hardware is calling it
         collector.setDirection(DcMotor.Direction.REVERSE); // sets the direction
@@ -45,9 +48,14 @@ public class BaseOp extends OpMode {
         leftBack = hardwareMap.dcMotor.get("leftBack");
         leftBack.setDirection(DcMotor.Direction.FORWARD);
 
+        loader = hardwareMap.servo.get("loader");
+        loader.setPosition(0.0);
 
+        buttonPress = hardwareMap.servo.get("buttonPress");
+        buttonPress.setPosition(90.0);
 
-
+        redBlueSensor = hardwareMap.colorSensor.get("redBlueSensor");
+        redBlueSensor.enableLed(false);
     }
 
     public void setAutoRunMode() // sets thing specific to autonomous

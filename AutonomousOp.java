@@ -3,6 +3,8 @@ package org.firstinspires.ftc.teamcode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.util.Range;
 
+import org.firstinspires.ftc.teamcode.BaseOp;
+
 @com.qualcomm.robotcore.eventloop.opmode.Autonomous(name = "Oscar: Autonomous Tank", group = "Oscar")
 public class AutonomousOp extends BaseOp {
     // public int rightFrontEncoderTarget= 5000;
@@ -15,23 +17,24 @@ public class AutonomousOp extends BaseOp {
         rightBack.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         leftFront.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         leftBack.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-
-        setAutoRunMode();
-    }
-
-    public void loop() {
-        super.loop();
-        autoShoot();
+        shooter.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
         int rightFrontEncoderTarget = 5000;
         int rightBackEncoderTarget = 5000;
         int leftFrontEncoderTarget = 5000; // tells it how many ticks to go
         int leftBackEncoderTarget = 5000;
+        setAutoRunMode();
+        runToInit();
+    }
 
-        rightFront.setTargetPosition((rightFront.getCurrentPosition() + rightFrontEncoderTarget));
-        rightBack.setTargetPosition((rightBack.getCurrentPosition() + rightBackEncoderTarget)); // sets the target position of the encoders to the current position + target position
-        leftFront.setTargetPosition(leftFront.getCurrentPosition() + leftFrontEncoderTarget);
-        leftBack.setTargetPosition(leftBack.getCurrentPosition() + leftBackEncoderTarget);
+    public void loop() {
+        super.loop();
+
+
+        rightFront.setTargetPosition((rightFront.getCurrentPosition()));
+        rightBack.setTargetPosition((rightBack.getCurrentPosition())); // sets the target position of the encoders to the current position + target position
+        leftFront.setTargetPosition(leftFront.getCurrentPosition());
+        leftBack.setTargetPosition(leftBack.getCurrentPosition());
 
        /* if (((rightFront.getCurrentPosition() < 4950) && (leftFront.getCurrentPosition()) < 4950)) {
             rightFront.setPower(1.0);
@@ -59,15 +62,15 @@ public class AutonomousOp extends BaseOp {
         */
     }
 
-
-    public void autoShoot() {//shoots the catapult
-
-        if (gamepad2.x) {
-            shooter.setTargetPosition(shooter.getCurrentPosition() + 900);
-            shooter.setPower(.5);
-            shooter.setTargetPosition(shooter.getCurrentPosition() + 360);
-            shooter.setPower(.5);
-            stopShooter();
+    public void runToInit(){
+        if (gamepad1.a || gamepad2.a){
+            shooter.setPower(50.0);
+        }
+        if (gamepad1.b || gamepad2.b){
+            shooter.setPower(-50.0);
+        }
+        if (gamepad1.start || gamepad2.start){
+            shooter.getCurrentPosition()
         }
     }
 
