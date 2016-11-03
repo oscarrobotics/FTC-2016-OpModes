@@ -70,7 +70,7 @@ public class AutonomousOp extends BaseOp {
             shooter.setPower(-50.0);
         }
         if (gamepad1.start || gamepad2.start){
-            shooter.getCurrentPosition()
+            shooter.getCurrentPosition();
         }
     }
 
