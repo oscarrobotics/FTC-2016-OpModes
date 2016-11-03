@@ -30,7 +30,7 @@ public class AutonomousOp extends BaseOp {
     public void loop() {
         super.loop();
 
-
+        telemetry.addData("ShooterEncPos", shooter.getCurrentPosition()); // telemetry for ShooterEncPos
         rightFront.setTargetPosition((rightFront.getCurrentPosition()));
         rightBack.setTargetPosition((rightBack.getCurrentPosition())); // sets the target position of the encoders to the current position + target position
         leftFront.setTargetPosition(leftFront.getCurrentPosition());
@@ -69,8 +69,8 @@ public class AutonomousOp extends BaseOp {
         if (gamepad1.b || gamepad2.b){
             shooter.setPower(-50.0);
         }
-        if (gamepad1.start || gamepad2.start){
-            shooter.getCurrentPosition();
+        if (gamepad1.start || gamepad2.start){ // zero encoder when 1 or 2 presses Start
+            shooter.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         }
     }
 
