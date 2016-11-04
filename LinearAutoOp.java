@@ -66,6 +66,7 @@ public class LinearAutoOp extends LinearOpMode {
 
         if (opModeIsActive() && isReady) {
             forward(23.5);
+            /*
             turnLeft(45);
             forward(16);
             autoShoot();
@@ -83,7 +84,9 @@ public class LinearAutoOp extends LinearOpMode {
             forward(81);
             turnRight(45);
             forward(-12);
+            */
             stopRobot();
+
         }
 
 
