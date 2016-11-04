@@ -1,10 +1,9 @@
 package org.firstinspires.ftc.teamcode;
 
-import com.qualcomm.hardware.ams.AMSColorSensor;
-import com.qualcomm.robotcore.util.Range;
 
 /**
  * Created by Ultra on 9/29/2016.
+ * Edited by Banks T on 11/3/2016.
  */
 @com.qualcomm.robotcore.eventloop.opmode.TeleOp(name = "Oscar: Teleop Tank", group = "Oscar")
 // sets what it will appear in the driverstation

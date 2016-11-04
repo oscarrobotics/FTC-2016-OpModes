@@ -7,24 +7,30 @@ import org.firstinspires.ftc.teamcode.BaseOp;
 
 @com.qualcomm.robotcore.eventloop.opmode.Autonomous(name = "Oscar: Autonomous Tank", group = "Oscar")
 public class AutonomousOp extends BaseOp {
-    // public int rightFrontEncoderTarget= 5000;
-    public int position;
+    public int position, encoderTarget;
+    public double drivePower;
 
     @Override
     public void init() {
         super.init();
+
+        // Init variables
         position = shooter.getCurrentPosition();
-        rightFront.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER); //sets the encoders to zero
+        encoderTarget = 4950; // encoder target in native Ticks
+        drivePower = 1.0;
+
+        // Init other stuff
+        rightFront.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER); // zeroes encoders
         rightBack.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         leftFront.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         leftBack.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        shooter.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        shooter.setMode(DcMotor.RunMode.RUN_USING_ENCODER); // what purpose does this serve?
+        rightFront.setTargetPosition((rightFront.getCurrentPosition()));
+        rightBack.setTargetPosition((rightBack.getCurrentPosition())); // sets the target position of the encoders to the current position + target position
+        leftFront.setTargetPosition(leftFront.getCurrentPosition());
+        leftBack.setTargetPosition(leftBack.getCurrentPosition());
 
-
-        int rightFrontEncoderTarget = 5000;
-        int rightBackEncoderTarget = 5000;
-        int leftFrontEncoderTarget = 5000; // tells it how many ticks to go
-        int leftBackEncoderTarget = 5000;
+        // Init commands
         setAutoRunMode();
         runToInit();
     }
@@ -33,17 +39,14 @@ public class AutonomousOp extends BaseOp {
         super.loop();
 
         telemetry.addData("ShooterEncPos", shooter.getCurrentPosition()); // telemetry for ShooterEncPos
-        rightFront.setTargetPosition((rightFront.getCurrentPosition()));
-        rightBack.setTargetPosition((rightBack.getCurrentPosition())); // sets the target position of the encoders to the current position + target position
-        leftFront.setTargetPosition(leftFront.getCurrentPosition());
-        leftBack.setTargetPosition(leftBack.getCurrentPosition());
 
-       /* if (((rightFront.getCurrentPosition() < 4950) && (leftFront.getCurrentPosition()) < 4950)) {
-            rightFront.setPower(1.0);
-            leftFront.setPower(1.0);
-            rightBack.setPower(1.0);
-            leftBack.setPower(1.0); // sets the motor power
-        } else {
+       if (((rightFront.getCurrentPosition() < encoderTarget) && (leftFront.getCurrentPosition()) < encoderTarget)) { // if we aren't at target, go full power
+            rightFront.setPower(drivePower);
+            leftFront.setPower(drivePower);
+            rightBack.setPower(drivePower);
+            leftBack.setPower(drivePower);
+        }
+        else { // once we reach target, stop
             rightFront.setPower(0.0);
             leftFront.setPower(0.0);
             rightBack.setPower(0.0);
@@ -51,7 +54,7 @@ public class AutonomousOp extends BaseOp {
 
         }
 
-        if (rightFront.getCurrentPosition() >= 4950) {
+        if (rightFront.getCurrentPosition() >= 4950) { // if we are at target, turn
             rightFront.setTargetPosition(rightFront.getCurrentPosition() + 1650);
             rightBack.setTargetPosition(rightBack.getCurrentPosition() + 1650);
 
@@ -61,12 +64,12 @@ public class AutonomousOp extends BaseOp {
             leftBack.setPower(-1.0);
             leftFront.setPower(-1.0);
         }
-        */
+
     }
 
-    public void runToInit(){
+    public void runToInit() {
         if (gamepad1.a || gamepad2.a){
-            shooter.setPower(50.0);
+            shooter.setPower(50.0); // this won't work
         }
         if (gamepad1.b || gamepad2.b){
             shooter.setPower(-50.0);
@@ -76,7 +79,7 @@ public class AutonomousOp extends BaseOp {
         }
     }
 
-    public void stopShooter() {//checks to see if the target
+    public void stopShooter() { //checks to see if the target
         shooter.setPower(0.0);
     }
 }
