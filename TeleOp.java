@@ -21,112 +21,110 @@ public class TeleOp extends BaseOp {
     public void loop() {
 
         super.loop();
-        /*
+
         float left = gamepad1.left_stick_y;
         float right = gamepad1.right_stick_y;
-
         right = Range.clip(right, -1, 1);
         left = Range.clip(left, -1, 1);
-
         right = (float) scaleInput(right);
         left = (float) scaleInput(left);
-
         rightFront.setPower(right); // sets the power of rightFront motor to the y axis of the right stick
         rightBack.setPower(right);
         leftFront.setPower(left);  // sets the power of the leftFront motor to the y axis of the left stick
         leftBack.setPower(left);
-        */
-        RobotDrive();
+
+
         Shoot();
+        try {
+            load();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
 
-        // ShootEnc();
-         Collect();
-        updateTelemetry(telemetry);              //sends feedback
 
+        Collect();
+        updateTelemetry(telemetry);
+        telemetry.addData("1", "shooterPos: " + shooterEncoder());
+        telemetry.addData("2", "loaderPos: " + servoLoader());
     }
+
 
     double scaleInput(double dVal) {
-        /*double[] scaleArray = {0.0, 0.05, 0.09, 0.10, 0.12, 0.15, 0.18, 0.24,
-                0.30, 0.36, 0.43, 0.50, 0.60, 0.72, 0.85, 1.00, 1.00};
-
-        // get the corresponding index for the scaleInput array.
-        int index = (int) (dVal * 16.0);
-
-        // index should be positive.
-        if (index < 0) {
-            index = -index;
-        }
-
-        // index cannot exceed size of array minus 1.
-        if (index > 16) {
-            index = 16;
-        }
-
-        // get value from the array.
-        double dScale = 0.0;
-       if (dVal < 0) {
-            dScale = -scaleArray[index];
-        } else {
-            dScale = scaleArray[index];
-        }
-
-
-        // return scaled value. */
-        return Math.abs(dVal) * dVal;
-
+  return Math.abs(dVal) * dVal;
 
     }
-    public void RobotDrive(){
-        Double left = Math.pow(gamepad1.left_stick_y,3 ),
-                right = Math.pow(gamepad1.right_stick_y,3),
-                leftMot= leftFront.getPower(),
-                rightMot= rightFront.getPower(),
-                rampRate= 0.2;
-        if( Math.abs(leftMot- left) > rampRate){
-            leftFront.setPower((leftMot+ Math.signum( (left- leftMot)* rampRate) ) );
-            leftBack.setPower((leftMot+ Math.signum( (left- leftMot)* rampRate) ) );
-        }
-        else{
+
+
+
+    public void RobotDrive() {
+        Double left = Math.pow(gamepad1.left_stick_y, 3),
+                right = Math.pow(gamepad1.right_stick_y, 3),
+                leftMot = leftFront.getPower(),
+                rightMot = rightFront.getPower(),
+                rampRate = 0.01;
+        if (Math.abs(leftMot - left) > rampRate) {
+            leftFront.setPower((leftMot + Math.signum((left - leftMot) * rampRate)));
+            leftBack.setPower((leftMot + Math.signum((left - leftMot) * rampRate)));
+        } else {
             leftFront.setPower(left);
             leftBack.setPower(left);
         }
 
-        if( Math.abs(rightMot- right) > rampRate){
-            leftFront.setPower((rightMot+ Math.signum( (right- rightMot)* rampRate) ) );
-            leftBack.setPower((rightMot+ Math.signum( (right- rightMot)* rampRate) ) );
-        }
-        else{
+        if (Math.abs(rightMot - right) > rampRate) {
+            rightFront.setPower((rightMot + Math.signum((right - rightMot) * rampRate)));
+            rightBack.setPower((rightMot + Math.signum((right - rightMot) * rampRate)));
+        } else {
             rightFront.setPower(right);
             rightBack.setPower(right);
         }
-
-
 
 
     }
 
 
     public void Shoot() {
-        if (gamepad1.right_trigger > 0.5) {
-            shooter.setPower(.5);
+        if (gamepad2.right_trigger > 0.5) {
+            shooter.setPower(1.0);
         } else
             shooter.setPower(0.0);
     }
 
-    public void ShootEnc() {
-        if (gamepad1.right_trigger > 0.5)
+    /* public void ShootEnc() {
+        if (gamepad1.x ) {
             shooter.setTargetPosition(1120 + shooter.getCurrentPosition());
+            shooter.setPower(.75);
+        }
+        else shooter.setPower(0.0);
     }
-
+*/
     public void Collect() {
-        if (gamepad1.a || gamepad2.a  ) {
-            collector.setPower(.75);
-        }
-        else if (gamepad1.a || gamepad2.a == false ) {
+        if (gamepad1.a || gamepad2.a) {
             collector.setPower(-.75);
-        }
+        } else if (gamepad1.b || gamepad2.b) {
+            collector.setPower(.75);
+        } else
+            collector.setPower(0.0);
 
+      /*
+        if ( gamepad1.a || gamepad2.a)
+            collector.setPower(.75);
+
+        else
+            collector.setPower(-.75);
+        */
 
     }
+
+     public void load() throws InterruptedException {
+
+
+         if (gamepad2.dpad_down)
+             loader.setPosition(.5);
+             else
+             loader.setPosition(.15);
+
+     }
+
 }
+
 

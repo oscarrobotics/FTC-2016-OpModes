@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode;
 
+import com.qualcomm.hardware.ams.AMSColorSensor;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorController;
@@ -22,12 +23,15 @@ public class BaseOp extends OpMode {
     DcMotor leftBack;
     DcMotor shooter;
     DcMotor collector;
+    Servo loader;
+
     public void init() //starts of the code, runs once
     {
 
 
         rightFront = hardwareMap.dcMotor.get("rightFront"); //tells the robot what the hardware is calling it
         rightFront.setDirection(DcMotor.Direction.REVERSE); // sets the direction
+
 
         shooter = hardwareMap.dcMotor.get("shooter"); //tells the robot what the hardware is calling it
         shooter.setDirection(DcMotor.Direction.FORWARD); // sets the direction
@@ -45,6 +49,8 @@ public class BaseOp extends OpMode {
         leftBack = hardwareMap.dcMotor.get("leftBack");
         leftBack.setDirection(DcMotor.Direction.FORWARD);
 
+        loader= hardwareMap.servo.get("loader");
+        loader.setDirection(Servo.Direction.FORWARD);
 
 
 
@@ -66,6 +72,7 @@ public class BaseOp extends OpMode {
         leftFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         leftBack.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         shooter.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        collector.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
     }
 
@@ -76,13 +83,16 @@ public class BaseOp extends OpMode {
 
     }
 
+    public int shooterEncoder() {
+        return shooter.getCurrentPosition();
+    }
 
-
-    public void loop()// constantly running code
-
-    {
-
+    public double servoLoader(){
+        return loader.getPosition();
 
     }
 
+
+    public void loop() {// constantly running code
+    }
 }
