@@ -20,8 +20,8 @@ public class LinearAutoOp extends LinearOpMode {
     DcMotor shooter;
     DcMotor collector;
     Servo loader;
-    long time = ElapsedTime.MILLIS_IN_NANO;
-    long waitTime = (long) 750;
+
+
     public boolean isReady=false;
 
     @Override
@@ -30,9 +30,11 @@ public class LinearAutoOp extends LinearOpMode {
         shooter = hardwareMap.dcMotor.get("shooter"); //tells the robot what the hardware is calling it
         shooter.setDirection(DcMotor.Direction.FORWARD); // sets the direction
 
+
         while(!isReady){
             isSet();
         }
+
 
         rightFront = hardwareMap.dcMotor.get("rightFront"); //tells the robot what the hardware is calling it
         rightFront.setDirection(DcMotor.Direction.REVERSE); // sets the direction
@@ -52,10 +54,6 @@ public class LinearAutoOp extends LinearOpMode {
         loader = hardwareMap.servo.get("loader");
         loader.setDirection(Servo.Direction.FORWARD);
 
-        rightFront.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER); //sets the encoders to zero
-        rightBack.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        leftFront.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        leftBack.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
 
         rightFront.setMode(DcMotor.RunMode.RUN_TO_POSITION); // sets the encoders to the right mode, tells the motor to run to the position it is given
@@ -63,9 +61,10 @@ public class LinearAutoOp extends LinearOpMode {
         leftFront.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         leftBack.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         shooter.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-
-        if (opModeIsActive() && isReady) {
-            forward(23.5);
+            waitForStart();
+        while(opModeIsActive()) {
+            if (opModeIsActive() && isReady) {
+                forward(23.5);
             /*
             turnLeft(45);
             forward(16);
@@ -85,18 +84,21 @@ public class LinearAutoOp extends LinearOpMode {
             turnRight(45);
             forward(-12);
             */
-            stopRobot();
+                stopRobot();
+                idle();
+                stop();
+            }
 
         }
-
-
     }
 
     public void forward(double a) {
-        final int move = (int) (a * 46.667);
-        rightFront.setTargetPosition((int) rightFront.getCurrentPosition() + move);
+
+        final int move = (int) (a * 44.8);
+       // final int error= (int) ((a * 23.334)+2);
+        rightFront.setTargetPosition((int) rightFront.getCurrentPosition() + move );
         leftFront.setTargetPosition((int) rightFront.getCurrentPosition() + move);
-        leftBack.setTargetPosition((int) rightFront.getCurrentPosition() + move);
+        leftBack.setTargetPosition((int) rightFront.getCurrentPosition() + move );
         rightBack.setTargetPosition((int) rightFront.getCurrentPosition() + move);
         while (rightFront.getCurrentPosition() != rightFront.getTargetPosition()) {
             rightFront.setPower(.75);
@@ -109,7 +111,7 @@ public class LinearAutoOp extends LinearOpMode {
     }
 
     public void turnRight(double a) {
-        final int move = (int) (a * 46.667 * .1351944);
+        final int move = (int) (a * 44.8 * .1351944);
         rightFront.setTargetPosition((int) rightFront.getCurrentPosition() + move);
         leftFront.setTargetPosition((int) rightFront.getCurrentPosition() - move);
         rightBack.setTargetPosition((int) rightFront.getCurrentPosition() + move);
@@ -125,7 +127,7 @@ public class LinearAutoOp extends LinearOpMode {
     }
 
     public void turnLeft(double a) {
-        final int move = (int) (a * 46.667 * .1351944);
+        final int move = (int) (a * 44.8 * .1351944);
         rightFront.setTargetPosition((int) rightFront.getCurrentPosition() - move);
         leftFront.setTargetPosition((int) rightFront.getCurrentPosition() + move);
         rightBack.setTargetPosition((int) rightFront.getCurrentPosition() - move);
@@ -142,9 +144,9 @@ public class LinearAutoOp extends LinearOpMode {
 
 
     public void autoShoot() {//shoots the catapult
-        shooter.setTargetPosition(shooter.getCurrentPosition() + (560 * 6));
+        shooter.setTargetPosition(shooter.getCurrentPosition() + (3360));
         if (shooter.getCurrentPosition() != shooter.getTargetPosition()) {
-            shooter.setPower(.99);
+            shooter.setPower(1.0);
         } else
             stopShooter();
     }
@@ -178,12 +180,12 @@ public class LinearAutoOp extends LinearOpMode {
         }
         if (gamepad1.start || gamepad2.start) { // zero encoder when 1 or 2 presses Start
             shooter.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+            shooter.setMode(DcMotor.RunMode.RUN_TO_POSITION);
             isReady = true;
         }
 
 
         }
-
 
 
 

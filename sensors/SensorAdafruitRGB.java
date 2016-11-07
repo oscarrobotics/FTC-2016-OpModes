@@ -116,7 +116,6 @@ public class SensorAdafruitRGB extends LinearOpMode {
     cdim.setDigitalChannelState(LED_CHANNEL, bLedOn);
 
     // wait for the start button to be pressed.
-    waitForStart();
 
     // loop and read the RGB data.
     // Note we use opModeIsActive() as our loop condition because it is an interruptible method.
