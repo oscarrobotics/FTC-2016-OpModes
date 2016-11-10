@@ -105,7 +105,7 @@ public class LinearAutoOp extends LinearOpMode {
         // Servo block
         loader = hardwareMap.servo.get("loader");
 
-        buttonPress = hardwareMap.servo.get("buttonPress");
+        buttonPress = hardwareMap.servo.get("beaconPress");
         shooter.setPower(1.0);
         shooter.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         shooter.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
