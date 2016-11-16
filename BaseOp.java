@@ -102,7 +102,6 @@ public class BaseOp extends OpMode {
         // TODO: enableLED doesn't seem to work, why?
         // Sensor block
         redBlueSensor = hardwareMap.colorSensor.get("redBlueSensor");
-        //redBlueSensor.enableLed(false); // disable LED by default
 
         odSensor = hardwareMap.opticalDistanceSensor.get("odSensor");
         gyro = hardwareMap.gyroSensor.get("gyro");
@@ -112,13 +111,14 @@ public class BaseOp extends OpMode {
     @Override
     public void init_loop() { // runs after pressing INIT and loops until START pressed
         super.init_loop();
+
         shooter.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
-        // TODO: Change this to UP DPAD and DOWN DPAD, respectively and experiment with different increments
-        if (gamepad2.a) { // bring shooter up by 25 ticks
+        // TODO: Experiment with different increments
+        if (gamepad2.dpad_up) { // bring shooter up by 25 ticks
             shooter.setTargetPosition(shooter.getCurrentPosition() + 25);
         }
-        if (gamepad2.y) { // bring shooter down by 25 ticks
+        if (gamepad2.dpad_down) { // bring shooter down by 25 ticks
             shooter.setTargetPosition(shooter.getCurrentPosition() - 25);
         }
 
@@ -185,4 +185,33 @@ public class BaseOp extends OpMode {
             telemetry.addData("None of the Above", "");
         }
     }
+    protected void stopDriving(){
+        leftBack.setPower(0.0);
+        leftFront.setPower(0.0);
+        rightBack.setPower(0.0);
+        rightFront.setPower(0.0);
+    }
+
+    protected void MecanumGamepadDrive() {
+        double speed = Math.hypot(gamepad1.left_stick_x, gamepad1.left_stick_y);
+        double direction = Math.atan2(gamepad1.left_stick_y, gamepad1.left_stick_x) - Math.PI / 4;
+        double rotation = gamepad1.right_stick_x;
+        MecanumDrive(speed, direction, rotation);
+    }
+
+    protected void MecanumDrive(double speed, double direction, double rotation) {
+        final double v1 = speed * Math.cos(direction) + rotation;
+        final double v2 = speed * Math.sin(direction) - rotation;
+        final double v3 = speed * Math.sin(direction) + rotation;
+        final double v4 = speed * Math.cos(direction) - rotation;
+
+        leftFront.setPower(v1);
+        rightFront.setPower(v2);
+        leftBack.setPower(v3);
+        rightBack.setPower(v4);
+    }
+
+
 }
+
+

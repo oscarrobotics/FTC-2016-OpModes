@@ -64,7 +64,7 @@ public class Auto2Ball extends BaseOp {
             }
 
             chrisAutoLoad(); // now load next ball
-            waitFor(125);
+            //waitFor(125);
             if(particlesShot == 1) { // if we've already shot once
                 chrisAutoShoot(); // shoot again
                 weDidIt = true; // we're done shooting
