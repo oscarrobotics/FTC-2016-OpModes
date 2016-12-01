@@ -1,11 +1,13 @@
 package org.firstinspires.ftc.teamcode;
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.util.Range;
 
 /**
  * Created by Ultra on 9/29/2016.
  * Edited by Banks T on 11/9/2016.
  */
+@Disabled
 @com.qualcomm.robotcore.eventloop.opmode.TeleOp(name = "Oscar: Teleop Tank", group = "Oscar")
 public class TeleOp extends BaseOp {
 
@@ -20,7 +22,7 @@ public class TeleOp extends BaseOp {
     public void loop() {
         super.loop();
 
-        // Commands
+               // Commands
         RobotDrive();
         Shoot();
         Collect();
@@ -84,11 +86,11 @@ public class TeleOp extends BaseOp {
 
     public void Collect() {
         if (gamepad2.b) { // if B pressed
-            collector.setPower(0.0); // turn off intake
+            collector.setPower(-1.0); // turn off intake
         } else if (gamepad2.a) { // if A pressed
             collector.setPower(1.0); // spin intake outwards
         } else {
-            collector.setPower(-1.0); // default to spinning in
+            collector.setPower(0.0); // default to spinning in
         }
     }
 }

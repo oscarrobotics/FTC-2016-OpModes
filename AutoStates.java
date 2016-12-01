@@ -3,24 +3,37 @@ package org.firstinspires.ftc.teamcode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
-import static org.firstinspires.ftc.teamcode.Auto3Ball.State.*;
+import static org.firstinspires.ftc.teamcode.AutoStates.State.STATE_CENTER_WHITE_LINE1;
+import static org.firstinspires.ftc.teamcode.AutoStates.State.STATE_DETECT_COLOR;
+import static org.firstinspires.ftc.teamcode.AutoStates.State.STATE_DRIVE_WHITE_LINE1;
+import static org.firstinspires.ftc.teamcode.AutoStates.State.STATE_FIRST_LOAD;
+import static org.firstinspires.ftc.teamcode.AutoStates.State.STATE_FIRST_SHOT;
+import static org.firstinspires.ftc.teamcode.AutoStates.State.STATE_GO_TO_BEACON1;
+import static org.firstinspires.ftc.teamcode.AutoStates.State.STATE_SECOND_SHOT;
+import static org.firstinspires.ftc.teamcode.AutoStates.State.STATE_WAIT_FOR_LOAD;
 
-@com.qualcomm.robotcore.eventloop.opmode.Autonomous(name = "Oscar: Auto 3 Ball", group = "Oscar")
-public class Auto3Ball extends BaseOp {
-    public int position, encoderTarget, particlesShot, particlesLoaded, loopCounter;
+@com.qualcomm.robotcore.eventloop.opmode.Autonomous(name = "Oscar: AutoStates", group = "Oscar")
+public class AutoStates extends BaseOp {
+    public int position, encoderTarget, particlesShot, particlesLoaded, loopCounter, timesMoved;
     public double drivePower;
     public boolean doneShooting;
+    public double startTime;
 
     public enum State { // Ideally, these stay in order of how we use them
         STATE_INITIAL,
         STATE_FIRST_SHOT,
         STATE_FIRST_LOAD,
+        STATE_WAIT_FOR_LOAD,
         STATE_SECOND_SHOT,
+        STATE_MOVE_FROM_WALL,
         STATE_DRIVE_WHITE_LINE1,
         STATE_DRIVE_WHITE_LINE2,
         STATE_GO_TO_BEACON1,
         STATE_PRESS_BUTTON,
-        STATE_CENER_WHITE_LINE1,
+        STATE_CENTER_WHITE_LINE1,
+        STATE_DETECT_COLOR,
+        STATE_PUSHING_LEFT,
+        STATE_PUSHIND_RIGHT,
         STATE_STOP
     }
 
@@ -52,6 +65,9 @@ public class Auto3Ball extends BaseOp {
         particlesShot = 0;
         doneShooting = false;
         loopCounter = 0;
+        beaconPress.setPosition(0.5);
+        timesMoved = 0;
+
 
         // Init other stuff
         rightFront.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER); // zeroes encoders
@@ -99,26 +115,57 @@ public class Auto3Ball extends BaseOp {
                     chrisAutoLoad();
                     particlesLoaded++;
                 } else {
-                    newState(STATE_SECOND_SHOT);
+                    startTime = System.currentTimeMillis();
+                    newState(STATE_WAIT_FOR_LOAD);
                 }
+                break;
+
+            case STATE_WAIT_FOR_LOAD:
+                if (System.currentTimeMillis() > startTime + 500)
+                    newState(STATE_SECOND_SHOT);
                 break;
 
             case STATE_SECOND_SHOT:
                 if (particlesShot == 1) {
                     chrisAutoShoot();
+                    particlesShot++;
                 } else {
                     newState(STATE_DRIVE_WHITE_LINE1);
                     odSensor.enableLed(true);
-                    //Drive to line here
+                    //MecanumDrive(0.2, 0.5, 1.0);
                 }
                 break;
+
+            case STATE_MOVE_FROM_WALL:
+                newState(STATE_DRIVE_WHITE_LINE1);
+                break;
+
             case STATE_DRIVE_WHITE_LINE1:
                 if (odSensor.getLightDetected() >= .5) {
                     stopDriving();
-                    //Add drive right code
-                    newState(STATE_GO_TO_BEACON1);
+                    newState(STATE_CENTER_WHITE_LINE1);
                 }
+                break;
+
+            case STATE_CENTER_WHITE_LINE1:
+                newState(STATE_GO_TO_BEACON1);
+                break;
+
+            case STATE_GO_TO_BEACON1:
+                //add code to drive left
+                newState(STATE_DETECT_COLOR);
+                break;
+
+            case STATE_DETECT_COLOR:
+                if (redBlueSensor.blue() >= redBlueSensor.red() + 50)
+                    beaconPress.setPosition(.75);
+                else
+                    beaconPress.setPosition(.25);
+                break;
+
         }
+
+
     }
 
     public void chrisAutoShoot() {

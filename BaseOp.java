@@ -5,10 +5,10 @@ import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorController;
 import com.qualcomm.robotcore.hardware.DeviceInterfaceModule;
+import com.qualcomm.robotcore.hardware.GyroSensor;
 import com.qualcomm.robotcore.hardware.OpticalDistanceSensor;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.ServoController;
-import com.qualcomm.robotcore.hardware.GyroSensor;
 
 /**
  * Created by Ultra on 9/29/2016
@@ -18,7 +18,6 @@ import com.qualcomm.robotcore.hardware.GyroSensor;
  * Edited by George on 11/5/2016
  * Edited by Chris on 11/5/2016
  * Edited by Banks on 11/5/2016
- *
  * Edited by Banks on 11/9/2016
  */
 
@@ -77,27 +76,27 @@ public class BaseOp extends OpMode {
         collector.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
 
         rightFront = hardwareMap.dcMotor.get("rightFront");
-        rightFront.setDirection(DcMotor.Direction.REVERSE);
-        rightFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+        rightFront.setDirection(DcMotor.Direction.FORWARD);
+        rightFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         rightBack = hardwareMap.dcMotor.get("rightBack");
-        rightBack.setDirection(DcMotor.Direction.REVERSE);
-        rightBack.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+        rightBack.setDirection(DcMotor.Direction.FORWARD);
+        rightBack.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         leftFront = hardwareMap.dcMotor.get("leftFront");
-        leftFront.setDirection(DcMotor.Direction.FORWARD);
-        leftFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+        leftFront.setDirection(DcMotor.Direction.REVERSE);
+        leftFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         leftBack = hardwareMap.dcMotor.get("leftBack");
-        leftBack.setDirection(DcMotor.Direction.FORWARD);
-        leftBack.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+        leftBack.setDirection(DcMotor.Direction.REVERSE);
+        leftBack.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         // Servo block
         loader = hardwareMap.servo.get("loader"); // shooter loader servo
         loader.setPosition(0.0); // TODO: Find right value for this
 
         beaconPress = hardwareMap.servo.get("beaconPress"); // beacon presser servo
-        beaconPress.setPosition(90.0); // TODO: Find right value for this
+        beaconPress.setPosition(0.5); // TODO: Find right value for this
 
         // TODO: enableLED doesn't seem to work, why?
         // Sensor block
@@ -122,9 +121,6 @@ public class BaseOp extends OpMode {
             shooter.setTargetPosition(shooter.getCurrentPosition() - 25);
         }
 
-        if (gamepad1.start || gamepad2.start) { // zero encoder when 1 or 2 presses Start
-            shooter.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        }
         telemetry.addData("Shooter Position", shooter.getCurrentPosition());
         telemetry.update();
     }
@@ -167,35 +163,40 @@ public class BaseOp extends OpMode {
             shooting = true;
             loading = false;
             telemetry.addData("getting ready to shoot", "");
-        }
-        else if (shooting && shooterReady() && !loading) { // IF SHOOTING and READY TO SHOOT
+        } else if (shooting && shooterReady() && !loading) { // IF SHOOTING and READY TO SHOOT
             loading = true;
             loader.setPosition(0.5);
             telemetry.addData("Trying to Load", "");
-        }
-        else if (loading && loader.getPosition() <= 0.49) { // IF LOADING and LOADER NOT THERE
+        } else if (loading && loader.getPosition() <= 0.49) { // IF LOADING and LOADER NOT THERE
             loading = false;
             shooting = false;
             loader.setPosition(0.15);
             telemetry.addData("else done shooting", "");
-        }
-        else {
+        } else {
             shooting = false;
             loading = false;
             telemetry.addData("None of the Above", "");
         }
     }
-    protected void stopDriving(){
+
+    protected void stopDriving() {
         leftBack.setPower(0.0);
         leftFront.setPower(0.0);
         rightBack.setPower(0.0);
         rightFront.setPower(0.0);
     }
 
+    public void driveSideways(){
+        leftFront.setPower(-1.0);
+        leftBack.setPower(1.0);
+        rightFront.setPower(-1.0);
+        rightBack.setPower(1.0);
+
+    }
     protected void MecanumGamepadDrive() {
         double speed = Math.hypot(gamepad1.left_stick_x, gamepad1.left_stick_y);
-        double direction = Math.atan2(gamepad1.left_stick_y, gamepad1.left_stick_x) - Math.PI / 4;
-        double rotation = gamepad1.right_stick_x;
+        double direction = Math.atan2(gamepad1.left_stick_y, -gamepad1.left_stick_x) - Math.PI / 4;
+        double rotation = -gamepad1.right_stick_x;
         MecanumDrive(speed, direction, rotation);
     }
 

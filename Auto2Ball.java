@@ -1,10 +1,11 @@
 package org.firstinspires.ftc.teamcode;
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.hardware.DcMotor;
 
 import java.util.concurrent.TimeUnit;
 
-
+@Disabled
 @com.qualcomm.robotcore.eventloop.opmode.Autonomous(name = "Oscar: Auto 2 Ball", group = "Oscar")
 public class Auto2Ball extends BaseOp {
     public int position, encoderTarget;
@@ -38,7 +39,11 @@ public class Auto2Ball extends BaseOp {
 
         // Init commands
         setAutoRunMode();
-        init_loop();
+    }
+
+    @Override
+    public void init_loop() {
+        super.init_loop();
     }
 
     public void loop() {
