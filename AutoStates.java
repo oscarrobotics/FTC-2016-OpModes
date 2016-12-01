@@ -4,11 +4,15 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import static org.firstinspires.ftc.teamcode.AutoStates.State.STATE_CENTER_WHITE_LINE1;
+import static org.firstinspires.ftc.teamcode.AutoStates.State.STATE_CENTER_WHITE_LINE2;
 import static org.firstinspires.ftc.teamcode.AutoStates.State.STATE_DETECT_COLOR;
+import static org.firstinspires.ftc.teamcode.AutoStates.State.STATE_DETECT_COLOR_2;
 import static org.firstinspires.ftc.teamcode.AutoStates.State.STATE_DRIVE_WHITE_LINE1;
+import static org.firstinspires.ftc.teamcode.AutoStates.State.STATE_DRIVE_WHITE_LINE2;
 import static org.firstinspires.ftc.teamcode.AutoStates.State.STATE_FIRST_LOAD;
 import static org.firstinspires.ftc.teamcode.AutoStates.State.STATE_FIRST_SHOT;
 import static org.firstinspires.ftc.teamcode.AutoStates.State.STATE_GO_TO_BEACON1;
+import static org.firstinspires.ftc.teamcode.AutoStates.State.STATE_GO_TO_BEACON2;
 import static org.firstinspires.ftc.teamcode.AutoStates.State.STATE_SECOND_SHOT;
 import static org.firstinspires.ftc.teamcode.AutoStates.State.STATE_WAIT_FOR_LOAD;
 
@@ -29,11 +33,15 @@ public class AutoStates extends BaseOp {
         STATE_DRIVE_WHITE_LINE1,
         STATE_DRIVE_WHITE_LINE2,
         STATE_GO_TO_BEACON1,
-        STATE_PRESS_BUTTON,
+        STATE_PRESSING_BEACON1,
         STATE_CENTER_WHITE_LINE1,
         STATE_DETECT_COLOR,
         STATE_PUSHING_LEFT,
-        STATE_PUSHIND_RIGHT,
+        STATE_PUSHING_RIGHT,
+        STATE_CENTER_WHITE_LINE2,
+        STATE_GO_TO_BEACON2,
+        STATE_DETECT_COLOR_2,
+        STATE_PRESSING_BEACON2,
         STATE_STOP
     }
 
@@ -161,7 +169,32 @@ public class AutoStates extends BaseOp {
                     beaconPress.setPosition(.75);
                 else
                     beaconPress.setPosition(.25);
+                newState(STATE_DRIVE_WHITE_LINE2);
                 break;
+
+            case STATE_DRIVE_WHITE_LINE2:
+                //Drive forward code goes here
+                newState(STATE_CENTER_WHITE_LINE2);
+
+                break;
+
+            case STATE_CENTER_WHITE_LINE2:
+                newState(STATE_GO_TO_BEACON2);
+                break;
+
+            case STATE_GO_TO_BEACON2:
+                //drive left code goes here
+                newState(STATE_DETECT_COLOR_2);
+
+                break;
+
+            case STATE_DETECT_COLOR_2:
+                if (redBlueSensor.blue() >= redBlueSensor.red() + 50)
+                    beaconPress.setPosition(.75);
+                else
+                    beaconPress.setPosition(.25);
+                break;
+
 
         }
 

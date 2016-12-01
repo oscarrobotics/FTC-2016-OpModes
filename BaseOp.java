@@ -103,8 +103,8 @@ public class BaseOp extends OpMode {
         redBlueSensor = hardwareMap.colorSensor.get("redBlueSensor");
 
         odSensor = hardwareMap.opticalDistanceSensor.get("odSensor");
-        gyro = hardwareMap.gyroSensor.get("gyro");
-        gyro.calibrate(); // calibrate gyro on init TODO: How long does this take?
+        //gyro = hardwareMap.gyroSensor.get("gyro");
+        //initGyro();
     }
 
     @Override
@@ -121,6 +121,9 @@ public class BaseOp extends OpMode {
             shooter.setTargetPosition(shooter.getCurrentPosition() - 25);
         }
 
+        if (gamepad2.start || gamepad1.start) {
+            shooter.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        }
         telemetry.addData("Shooter Position", shooter.getCurrentPosition());
         telemetry.update();
     }
@@ -212,6 +215,17 @@ public class BaseOp extends OpMode {
         rightBack.setPower(v4);
     }
 
+    /*
+
+    private void initGyro() {
+        telemetry.addData("3", "initGyro");
+        telemetry.update();
+        long startTime = System.currentTimeMillis();
+        gyro.calibrate(); // calibrate gyro on init TODO: How long does this take?
+        telemetry.addData("3", "gyroInitTimeMs" + (System.currentTimeMillis() - startTime));
+        telemetry.update();
+    }
+    */
 
 }
 

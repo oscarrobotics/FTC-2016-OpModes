@@ -25,13 +25,17 @@ public class TestOp extends BaseOp {
 
     @Override
     public void loop() {
-
+        /*
         // Controls block
         if (gamepad2.dpad_up || gamepad1.dpad_up) { // increment shooter tick position by 25 while held
             shooter.setTargetPosition(shooter.getCurrentPosition() + 25);
         }
         if (gamepad2.dpad_down || gamepad1.dpad_down) { // decrement shooter tick position by 25 while held
             shooter.setTargetPosition(shooter.getCurrentPosition() - 25);
+        }
+
+        if (gamepad2.start || gamepad1.start) {
+            shooter.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         }
 
         // Telemetry block
@@ -41,5 +45,6 @@ public class TestOp extends BaseOp {
         telemetry.addData("Blue", redBlueSensor.blue());
         telemetry.addData("Shooter Position", shooter.getCurrentPosition());
         telemetry.addData("White Line", odSensor.getLightDetected());
+        */
     }
 }
