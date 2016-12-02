@@ -1,6 +1,8 @@
 package org.firstinspires.ftc.teamcode;
 
 
+import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
 
 /**
@@ -9,9 +11,31 @@ import com.qualcomm.robotcore.util.Range;
 @com.qualcomm.robotcore.eventloop.opmode.TeleOp(name = "Oscar: Teleop Mecanum Tank", group = "Oscar")
 public class MecanumTeleOp extends BaseOp {
 
+    public boolean firingCycleStarted = false;
+    public boolean isShooting = false;
+    public long timeAtStart;
+
+    public enum State {
+        STATE_IDLE,
+        STATE_LOADING,
+        STATE_WAIT_TO_SHOOT,
+        STATE_INCREMENT_TARGET_POSITION,
+        STATE_RETURN_TO_IDLE
+    }
+
+    private ElapsedTime mStateTime = new ElapsedTime();  // Time into current state
+    private MecanumTeleOp.State mCurrentState;
+
+
     @Override
     public void init() {
         super.init();
+    }
+
+    @Override
+    public void start() {
+        resetStartTime();
+        newState(State.STATE_IDLE);
     }
 
     @Override
@@ -23,27 +47,18 @@ public class MecanumTeleOp extends BaseOp {
     public void loop() {
         super.loop();
         MecanumGamepadDrive();
-
-        if (gamepad2.y)
-            beaconPress.setPosition(Range.clip( beaconPress.getPosition()+.01, 0.0,1.0));
-
-        if (gamepad2.a)
-            beaconPress.setPosition(Range.clip( beaconPress.getPosition()-.01, 0.0,1.0));
-
-        if(gamepad1.x)
-            driveSideways();
-
-
         Shoot();
         Collect();
         Load();
         BeaconPress();
+        fullAutoFire();
 
         telemetry.addData("1", beaconPress.getPosition());
     }
+
     public void Shoot() {
         if (gamepad2.right_trigger > 0.5) { // If right trigger pressed
-            shootParticle(); // fire
+            manualFire(); // fire
         }
     }
 
@@ -75,5 +90,46 @@ public class MecanumTeleOp extends BaseOp {
         } else {
             collector.setPower(0.0); // default to off
         }
+    }
+
+
+    public void fullAutoFire() {
+        shooter.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        switch (mCurrentState) {
+            case STATE_IDLE:
+                if(gamepad2.left_trigger > 0.5)
+                    newState(State.STATE_LOADING);
+                break;
+
+            case STATE_LOADING: // start loading
+                timeAtStart = System.currentTimeMillis();
+                loader.setPosition(0.5);
+                newState(State.STATE_WAIT_TO_SHOOT);
+                break;
+
+            case STATE_WAIT_TO_SHOOT:
+                if(System.currentTimeMillis() >= timeAtStart + 200) {
+                    loader.setPosition(0.3);
+                    shooterTargetPosition -= 3360;
+                    shooter.setTargetPosition(shooterTargetPosition);
+                    newState(State.STATE_RETURN_TO_IDLE);
+                }
+                break;
+
+            case STATE_RETURN_TO_IDLE:
+                if(shooterReady()) {
+                    newState(State.STATE_IDLE);
+                }
+                break;
+
+
+
+        }
+    }
+
+    private void newState(MecanumTeleOp.State newState) {
+        // Reset the state time, and then change to next state.
+        mStateTime.reset();
+        mCurrentState = newState;
     }
 }

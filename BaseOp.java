@@ -68,8 +68,10 @@ public class BaseOp extends OpMode {
 
         // Motor block
         shooter = hardwareMap.dcMotor.get("shooter"); // Shooter Motor
+        shooter.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         shooter.setDirection(DcMotor.Direction.FORWARD);
         shooter.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        shooter.setPower(1.0);
 
         collector = hardwareMap.dcMotor.get("collector"); // Spinny Foam Thing Motor
         collector.setDirection(DcMotor.Direction.REVERSE);
@@ -105,6 +107,7 @@ public class BaseOp extends OpMode {
         odSensor = hardwareMap.opticalDistanceSensor.get("odSensor");
         //gyro = hardwareMap.gyroSensor.get("gyro");
         //initGyro();
+
     }
 
     @Override
@@ -142,7 +145,7 @@ public class BaseOp extends OpMode {
         leftFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         leftBack.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         shooter.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        beaconPress.setPosition(.5);
+        shooter.setPower(1.0);
     }
 
     public void loop() { // constantly running code
@@ -157,7 +160,7 @@ public class BaseOp extends OpMode {
     }
 
     // TODO: Are there any improvements we can make here?
-    public void shootParticle() { // Teleop particle shooting
+    public void manualFire() { // Teleop particle shooting
         shooter.setPower(1.0);
         shooter.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         if (!shooting && shooterReady()) { // if NOT SHOOTING but READY TO SHOOT
@@ -189,17 +192,30 @@ public class BaseOp extends OpMode {
         rightFront.setPower(0.0);
     }
 
-    public void driveSideways(){
-        leftFront.setPower(-1.0);
-        leftBack.setPower(1.0);
-        rightFront.setPower(-1.0);
-        rightBack.setPower(1.0);
 
-    }
     protected void MecanumGamepadDrive() {
-        double speed = Math.hypot(gamepad1.left_stick_x, gamepad1.left_stick_y);
-        double direction = Math.atan2(gamepad1.left_stick_y, -gamepad1.left_stick_x) - Math.PI / 4;
-        double rotation = -gamepad1.right_stick_x;
+        double speed = 0;
+        double direction = 0;
+        double rotation = 0;
+        if (gamepad1.dpad_up || gamepad1.dpad_down || gamepad1.dpad_left || gamepad1.dpad_right) {
+            if (gamepad1.dpad_up) { // forwards
+                speed = 0.3;
+                direction = Math.PI * 1.25;
+            } else if (gamepad1.dpad_right) { // right
+                speed = 0.7;
+                direction = Math.PI * 0.75;
+            } else if (gamepad1.dpad_down) { // backwards
+                speed = 0.3;
+                direction = Math.PI * 0.25;
+            } else { // left
+                speed = 0.7;
+                direction = Math.PI * 1.75;
+            }
+        } else {
+            speed = Math.hypot(gamepad1.left_stick_x, gamepad1.left_stick_y);
+            direction = Math.atan2(gamepad1.left_stick_y, -gamepad1.left_stick_x) - Math.PI / 4;
+            rotation = -gamepad1.right_stick_x;
+        }
         MecanumDrive(speed, direction, rotation);
     }
 

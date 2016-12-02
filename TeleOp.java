@@ -60,7 +60,7 @@ public class TeleOp extends BaseOp {
 
     public void Shoot() {
         if (gamepad2.right_trigger > 0.5) { // If right trigger pressed
-            shootParticle(); // fire
+            manualFire(); // fire
         }
     }
 
