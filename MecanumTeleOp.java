@@ -7,18 +7,18 @@ import com.qualcomm.robotcore.util.Range;
 
 /**
  * Created by Chris on 11/10/2016.
+ * Edited by George on 12/6/2016.
  */
 @com.qualcomm.robotcore.eventloop.opmode.TeleOp(name = "Oscar: Teleop Mecanum Tank", group = "Oscar")
 public class MecanumTeleOp extends BaseOp {
 
-    public boolean firingCycleStarted = false;
-    public boolean isShooting = false;
     public long timeAtStart;
 
     public enum State {
         STATE_IDLE,
         STATE_LOADING,
         STATE_WAIT_TO_SHOOT,
+        STATE_LOADER_MOVE_DELAY,
         STATE_INCREMENT_TARGET_POSITION,
         STATE_RETURN_TO_IDLE
     }
@@ -107,11 +107,17 @@ public class MecanumTeleOp extends BaseOp {
                 newState(State.STATE_WAIT_TO_SHOOT);
                 break;
 
-            case STATE_WAIT_TO_SHOOT:
-                if(System.currentTimeMillis() >= timeAtStart + 200) {
-                    loader.setPosition(0.3);
-                    shooterTargetPosition -= 3360;
+            case STATE_WAIT_TO_SHOOT: // loading is finished, move back servo for 100ms before firing
+                if(System.currentTimeMillis() >= timeAtStart + 500) {
+                    loader.setPosition(0.15);
                     shooter.setTargetPosition(shooterTargetPosition);
+                    newState(State.STATE_INCREMENT_TARGET_POSITION);
+                }
+                break;
+
+            case STATE_INCREMENT_TARGET_POSITION: //
+                if(System.currentTimeMillis() >= timeAtStart + 600) {
+                    shooterTargetPosition -= 3360;
                     newState(State.STATE_RETURN_TO_IDLE);
                 }
                 break;
