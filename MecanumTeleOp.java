@@ -114,20 +114,21 @@ public class MecanumTeleOp extends BaseOp {
                 newState(State.STATE_WAIT_TO_SHOOT);
                 break;
 
-<<<<<<< HEAD
             case STATE_WAIT_TO_SHOOT: // loading is finished, move back servo for 100ms before firing
                 if(System.currentTimeMillis() >= timeAtStart + 500) {
                     loader.setPosition(0.15);
-=======
-            case STATE_WAIT_TO_SHOOT:
-                if(System.currentTimeMillis() >= timeAtStart + 1000) {
-                    loader.setPosition(0.2);
-                    shooterTargetPosition -= 3360;
->>>>>>> origin/banks
-                    shooter.setTargetPosition(shooterTargetPosition);
                     newState(State.STATE_INCREMENT_TARGET_POSITION);
                 }
-                break;
+                    break;
+
+//            case STATE_WAIT_TO_SHOOT:
+//                if(System.currentTimeMillis() >= timeAtStart + 1000) {
+//                    loader.setPosition(0.2);
+//                    shooterTargetPosition -= 3360;
+//                    shooter.setTargetPosition(shooterTargetPosition);
+//                    newState(State.STATE_INCREMENT_TARGET_POSITION);
+//                }
+//                break;
 
             case STATE_INCREMENT_TARGET_POSITION: //
                 if(System.currentTimeMillis() >= timeAtStart + 600) {
