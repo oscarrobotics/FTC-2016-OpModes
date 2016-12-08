@@ -101,7 +101,7 @@ public class AutoStates extends BaseOp {
 
         // Telemetry block
         telemetry.addData("0", "Loop count " + loopCounter);
-        telemetry.update(); // update telemetry
+        //telemetry.update(); // update telemetry
 
         switch (mCurrentState) {
             case STATE_INITIAL:

@@ -3,7 +3,6 @@ package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.util.ElapsedTime;
-import com.qualcomm.robotcore.util.Range;
 
 /**
  * Created by Chris on 11/10/2016.
@@ -11,8 +10,6 @@ import com.qualcomm.robotcore.util.Range;
 @com.qualcomm.robotcore.eventloop.opmode.TeleOp(name = "Oscar: Teleop Mecanum Tank", group = "Oscar")
 public class MecanumTeleOp extends BaseOp {
 
-    public boolean firingCycleStarted = false;
-    public boolean isShooting = false;
     public long timeAtStart;
 
     public enum State {
@@ -46,12 +43,20 @@ public class MecanumTeleOp extends BaseOp {
     @Override
     public void loop() {
         super.loop();
+
+        if (Math.abs(gamepad1.left_stick_x) < 0.1 && lastKnownRotJoy != 0.0) {
+            targetHeading = Math.abs(angles.firstAngle%360.0);
+        }
+        lastKnownRotJoy = gamepad1.left_stick_x;
+
         MecanumGamepadDrive();
         Shoot();
         Collect();
         Load();
         BeaconPress();
         fullAutoFire();
+
+
 
         telemetry.addData("1", beaconPress.getPosition());
     }
@@ -108,8 +113,8 @@ public class MecanumTeleOp extends BaseOp {
                 break;
 
             case STATE_WAIT_TO_SHOOT:
-                if(System.currentTimeMillis() >= timeAtStart + 200) {
-                    loader.setPosition(0.3);
+                if(System.currentTimeMillis() >= timeAtStart + 1000) {
+                    loader.setPosition(0.2);
                     shooterTargetPosition -= 3360;
                     shooter.setTargetPosition(shooterTargetPosition);
                     newState(State.STATE_RETURN_TO_IDLE);

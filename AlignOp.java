@@ -49,7 +49,7 @@ public class AlignOp extends BaseOp {
 
     public void whiteLineSensor() {
         odSensor.enableLed(true);
-        odValue = odSensor.getLightDetected();
+        odValue = odSensor.getRawLightDetected();
         sensorValues1 = "odSensor: " + odValue;
     }
 
