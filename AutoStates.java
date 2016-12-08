@@ -9,11 +9,13 @@ import static org.firstinspires.ftc.teamcode.AutoStates.State.STATE_DETECT_COLOR
 import static org.firstinspires.ftc.teamcode.AutoStates.State.STATE_DETECT_COLOR_2;
 import static org.firstinspires.ftc.teamcode.AutoStates.State.STATE_DRIVE_WHITE_LINE1;
 import static org.firstinspires.ftc.teamcode.AutoStates.State.STATE_DRIVE_WHITE_LINE2;
+import static org.firstinspires.ftc.teamcode.AutoStates.State.STATE_FIRST_DRIVE;
 import static org.firstinspires.ftc.teamcode.AutoStates.State.STATE_FIRST_LOAD;
 import static org.firstinspires.ftc.teamcode.AutoStates.State.STATE_FIRST_SHOT;
 import static org.firstinspires.ftc.teamcode.AutoStates.State.STATE_GO_TO_BEACON1;
 import static org.firstinspires.ftc.teamcode.AutoStates.State.STATE_GO_TO_BEACON2;
 import static org.firstinspires.ftc.teamcode.AutoStates.State.STATE_SECOND_SHOT;
+import static org.firstinspires.ftc.teamcode.AutoStates.State.STATE_WAIT_FOR_FIRST_DRIVE;
 import static org.firstinspires.ftc.teamcode.AutoStates.State.STATE_WAIT_FOR_LOAD;
 
 @com.qualcomm.robotcore.eventloop.opmode.Autonomous(name = "Oscar: AutoStates", group = "Oscar")
@@ -25,6 +27,8 @@ public class AutoStates extends BaseOp {
 
     public enum State { // Ideally, these stay in order of how we use them
         STATE_INITIAL,
+        STATE_FIRST_DRIVE,
+        STATE_WAIT_FOR_FIRST_DRIVE,
         STATE_FIRST_SHOT,
         STATE_FIRST_LOAD,
         STATE_WAIT_FOR_LOAD,
@@ -106,9 +110,26 @@ public class AutoStates extends BaseOp {
         switch (mCurrentState) {
             case STATE_INITIAL:
                 // do nothing (for now)
-                newState(STATE_FIRST_SHOT);
+                newState(STATE_FIRST_DRIVE);
                 break;
 
+            case STATE_FIRST_DRIVE:
+                rightFront.setPower(1);
+                rightBack.setPower(-1);
+                leftFront.setPower(-1);
+                leftBack.setPower(1);
+                startTime = System.currentTimeMillis();
+                newState(STATE_WAIT_FOR_FIRST_DRIVE);
+                break;
+
+            case STATE_WAIT_FOR_FIRST_DRIVE:
+                if(System.currentTimeMillis()> startTime + 2500){
+                    rightFront.setPower(0);
+                    rightBack.setPower(0);
+                    leftFront.setPower(0);
+                    leftBack.setPower(0);
+                    newState(STATE_FIRST_SHOT);
+                }
             case STATE_FIRST_SHOT:
                 if (particlesShot == 0) {
                     chrisAutoShoot();
