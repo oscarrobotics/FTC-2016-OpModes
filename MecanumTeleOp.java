@@ -6,6 +6,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 
 /**
  * Created by Chris on 11/10/2016.
+ * Edited by George on 12/6/2016.
  */
 @com.qualcomm.robotcore.eventloop.opmode.TeleOp(name = "Oscar: Teleop Mecanum Tank", group = "Oscar")
 public class MecanumTeleOp extends BaseOp {
@@ -16,13 +17,13 @@ public class MecanumTeleOp extends BaseOp {
         STATE_IDLE,
         STATE_LOADING,
         STATE_WAIT_TO_SHOOT,
+        STATE_LOADER_MOVE_DELAY,
         STATE_INCREMENT_TARGET_POSITION,
         STATE_RETURN_TO_IDLE
     }
 
     private ElapsedTime mStateTime = new ElapsedTime();  // Time into current state
     private MecanumTeleOp.State mCurrentState;
-
 
     @Override
     public void init() {
@@ -44,9 +45,20 @@ public class MecanumTeleOp extends BaseOp {
     public void loop() {
         super.loop();
 
+<<<<<<< HEAD
         if (Math.abs(gamepad1.left_stick_x) < 0.1 && lastKnownRotJoy != 0.0) {
             targetHeading = Math.abs(angles.firstAngle % 360.0);
         }
+=======
+
+
+//        if (Math.abs(gamepad1.left_stick_x) < 0.1 && lastKnownRotJoy != 0.0) {
+//            targetHeading = Math.abs(angles.firstAngle%360.0);
+//        }
+
+        targetHeading += gamepad1.left_stick_x * Math.PI * 0.0625;
+
+>>>>>>> origin/gorg
         lastKnownRotJoy = gamepad1.left_stick_x;
 
         MecanumGamepadDrive();
@@ -111,11 +123,31 @@ public class MecanumTeleOp extends BaseOp {
                 newState(State.STATE_WAIT_TO_SHOOT);
                 break;
 
+<<<<<<< HEAD
             case STATE_WAIT_TO_SHOOT:
                 if (System.currentTimeMillis() >= timeAtStart + 1000) {
                     loader.setPosition(0.2);
+=======
+            case STATE_WAIT_TO_SHOOT: // loading is finished, move back servo for 100ms before firing
+                if(System.currentTimeMillis() >= timeAtStart + 500) {
+                    loader.setPosition(0.15);
+                    newState(State.STATE_INCREMENT_TARGET_POSITION);
+                }
+                    break;
+
+//            case STATE_WAIT_TO_SHOOT:
+//                if(System.currentTimeMillis() >= timeAtStart + 1000) {
+//                    loader.setPosition(0.2);
+//                    shooterTargetPosition -= 3360;
+//                    shooter.setTargetPosition(shooterTargetPosition);
+//                    newState(State.STATE_INCREMENT_TARGET_POSITION);
+//                }
+//                break;
+
+            case STATE_INCREMENT_TARGET_POSITION: //
+                if(System.currentTimeMillis() >= timeAtStart + 600) {
+>>>>>>> origin/gorg
                     shooterTargetPosition -= 3360;
-                    shooter.setTargetPosition(shooterTargetPosition);
                     newState(State.STATE_RETURN_TO_IDLE);
                 }
                 break;
@@ -134,5 +166,9 @@ public class MecanumTeleOp extends BaseOp {
         // Reset the state time, and then change to next state.
         mStateTime.reset();
         mCurrentState = newState;
+    }
+
+    public void rotation(){
+
     }
 }
