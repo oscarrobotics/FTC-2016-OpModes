@@ -25,7 +25,6 @@ public class MecanumTeleOp extends BaseOp {
     private ElapsedTime mStateTime = new ElapsedTime();  // Time into current state
     private MecanumTeleOp.State mCurrentState;
 
-
     @Override
     public void init() {
         super.init();
@@ -46,9 +45,14 @@ public class MecanumTeleOp extends BaseOp {
     public void loop() {
         super.loop();
 
-        if (Math.abs(gamepad1.left_stick_x) < 0.1 && lastKnownRotJoy != 0.0) {
-            targetHeading = Math.abs(angles.firstAngle%360.0);
-        }
+
+
+//        if (Math.abs(gamepad1.left_stick_x) < 0.1 && lastKnownRotJoy != 0.0) {
+//            targetHeading = Math.abs(angles.firstAngle%360.0);
+//        }
+
+        targetHeading += gamepad1.left_stick_x * Math.PI * 0.0625;
+
         lastKnownRotJoy = gamepad1.left_stick_x;
 
         MecanumGamepadDrive();
@@ -152,5 +156,9 @@ public class MecanumTeleOp extends BaseOp {
         // Reset the state time, and then change to next state.
         mStateTime.reset();
         mCurrentState = newState;
+    }
+
+    public void rotation(){
+
     }
 }

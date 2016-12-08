@@ -242,7 +242,8 @@ public class BaseOp extends OpMode {
             // right hand drive
             speed = Math.hypot(gamepad1.right_stick_x, gamepad1.right_stick_y);
             direction = Math.atan2(gamepad1.right_stick_y, -gamepad1.right_stick_x) - Math.PI / 4;
-            rotation = -gamepad1.left_stick_x;
+            //rotation = -gamepad1.left_stick_x;
+            rotation = rotationComp();
         }
         MecanumDrive(speed, direction, rotation);
     }
@@ -255,6 +256,8 @@ public class BaseOp extends OpMode {
         double epsilon = 2;
         double minSpeed = 0.16;
         double maxSpeed = 0.3;
+
+
 
         if (target < 180) {
             target += 360;
