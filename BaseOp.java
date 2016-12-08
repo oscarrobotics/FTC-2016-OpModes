@@ -2,6 +2,8 @@ package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.hardware.adafruit.BNO055IMU;
 import com.qualcomm.hardware.adafruit.JustLoggingAccelerationIntegrator;
+import com.qualcomm.hardware.ams.AMSColorSensor;
+import com.qualcomm.hardware.ams.AMSColorSensorImpl;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -52,12 +54,11 @@ public class BaseOp extends OpMode {
     Servo beaconPress; // beacon presser servo
 
     // Sensors
-
-    ColorSensor redBlueSensor; // Adafruit RGBW sensor
+    AMSColorSensorImpl redBlueSensor;
+    // ColorSensor redBlueSensor; // Adafruit RGBW sensor
     OpticalDistanceSensor odSensor; // Modern Robotics RGBW sensor
     BNO055IMU imu; // Gyro
     Orientation angles; // Gyro angles
-    Acceleration gravity; // Gyro gravity
 
     // Variables
     public int shooterTargetPosition = 0;
@@ -115,7 +116,11 @@ public class BaseOp extends OpMode {
         beaconPress.setPosition(0.5); // TODO: Find right value for this
 
         // Sensor block
-        redBlueSensor = hardwareMap.colorSensor.get("redBlueSensor");
+
+        /*redBlueSensor = (AMSColorSensorImpl)hardwareMap.colorSensor.get("redBlueSensor");
+        AMSColorSensor.Parameters params = redBlueSensor.getParameters();
+        redBlueSensor.initialize(params);
+*/
         odSensor = hardwareMap.opticalDistanceSensor.get("odSensor");
 
         // Gyro block
@@ -169,6 +174,10 @@ public class BaseOp extends OpMode {
     }
 
     public void loop() { // constantly running code
+        telemetry.addLine()
+                .addData("ShooterPos", shooter.getCurrentPosition())
+                .addData("Target", shooterTargetPosition);
+
         angles = imu.getAngularOrientation().toAxesReference(AxesReference.INTRINSIC).toAxesOrder(AxesOrder.ZYX);
         currentGyroHeading = Math.abs(angles.firstAngle % 360.0);
         ////telemetry.update();
@@ -216,7 +225,7 @@ public class BaseOp extends OpMode {
         double direction = 0;
         double rotation = 0;
 
-        // Dpad drive
+        // DPad drive
         if (gamepad1.dpad_up || gamepad1.dpad_down || gamepad1.dpad_left || gamepad1.dpad_right) {
             if (gamepad1.dpad_up) { // forwards
                 speed = 0.3;
@@ -235,9 +244,9 @@ public class BaseOp extends OpMode {
         // Joystick drive
         else {
             // left hand drive
-//            speed = Math.hypot(gamepad1.left_stick_x, gamepad1.left_stick_y);
-//            direction = Math.atan2(gamepad1.left_stick_y, -gamepad1.left_stick_x) - Math.PI / 4;
-//            rotation = -gamepad1.right_stick_x;
+            // speed = Math.hypot(gamepad1.left_stick_x, gamepad1.left_stick_y);
+            // direction = Math.atan2(gamepad1.left_stick_y, -gamepad1.left_stick_x) - Math.PI / 4;
+            // rotation = -gamepad1.right_stick_x;
 
             // right hand drive
             speed = Math.hypot(gamepad1.right_stick_x, gamepad1.right_stick_y);
@@ -251,22 +260,17 @@ public class BaseOp extends OpMode {
         double rotation = 0.0;
         double gyro = currentGyroHeading;
         double target = targetHeading;
-        double diff;
-        double epsilon = 2;
+        double posError = gyro - target;
+        double epsilon = 4;
         double minSpeed = 0.16;
         double maxSpeed = 0.3;
 
-        if (target < 180) {
-            target += 360;
+        if (Math.abs(posError) > 180) {
+            posError = -360 * Math.signum(posError) + posError;
         }
-        if (gyro < 180) {
-            gyro += 360;
-        }
-        diff = gyro - target;
-        if (Math.abs(diff) > epsilon) {
-
-            rotation = minSpeed + (Math.abs(diff) / 180) * (maxSpeed - minSpeed);
-            rotation = rotation * (diff / Math.abs(diff));
+        if (Math.abs(posError) > epsilon) {
+            rotation = minSpeed + (Math.abs(posError) / 180) * (maxSpeed - minSpeed);
+            rotation = rotation * Math.signum(posError);
         }
         return rotation;
     }
@@ -292,40 +296,6 @@ public class BaseOp extends OpMode {
         leftBack.setPower(v3);
         rightBack.setPower(v4);
     }
-
-    // Gyro functions
-    String formatAngle(AngleUnit angleUnit, double angle) {
-        return formatDegrees(AngleUnit.DEGREES.fromUnit(angleUnit, angle));
-    }
-
-    String formatDegrees(double degrees) {
-        return String.format(Locale.getDefault(), "%.1f", AngleUnit.DEGREES.normalize(degrees));
-    }
-
-    public void gyroTelemetry() {
-        telemetry.addLine()
-                .addData("heading", getHeading())
-                .addData("roll", getRoll())
-                .addData("pitch", getPitch());
-        telemetry.addLine()
-                .addData("miketest", angles.secondAngle);
-
-    }
-
-    public double getHeading() {
-        return Double.parseDouble(formatAngle(angles.angleUnit, angles.firstAngle));
-    }
-
-    public double getRoll() {
-        //return Double.parseDouble(formatAngle(angles.angleUnit, angles.secondAngle));
-        return 1.0;
-    }
-
-    public double getPitch() {
-        return Double.parseDouble(formatAngle(angles.angleUnit, angles.thirdAngle));
-    }
-
-
 }
 
 

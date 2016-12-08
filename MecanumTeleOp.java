@@ -45,7 +45,7 @@ public class MecanumTeleOp extends BaseOp {
         super.loop();
 
         if (Math.abs(gamepad1.left_stick_x) < 0.1 && lastKnownRotJoy != 0.0) {
-            targetHeading = Math.abs(angles.firstAngle%360.0);
+            targetHeading = Math.abs(angles.firstAngle % 360.0);
         }
         lastKnownRotJoy = gamepad1.left_stick_x;
 
@@ -55,7 +55,6 @@ public class MecanumTeleOp extends BaseOp {
         Load();
         BeaconPress();
         fullAutoFire();
-
 
 
         telemetry.addData("1", beaconPress.getPosition());
@@ -102,7 +101,7 @@ public class MecanumTeleOp extends BaseOp {
         shooter.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         switch (mCurrentState) {
             case STATE_IDLE:
-                if(gamepad2.left_trigger > 0.5)
+                if (gamepad2.left_trigger > 0.5)
                     newState(State.STATE_LOADING);
                 break;
 
@@ -113,7 +112,7 @@ public class MecanumTeleOp extends BaseOp {
                 break;
 
             case STATE_WAIT_TO_SHOOT:
-                if(System.currentTimeMillis() >= timeAtStart + 1000) {
+                if (System.currentTimeMillis() >= timeAtStart + 1000) {
                     loader.setPosition(0.2);
                     shooterTargetPosition -= 3360;
                     shooter.setTargetPosition(shooterTargetPosition);
@@ -122,11 +121,10 @@ public class MecanumTeleOp extends BaseOp {
                 break;
 
             case STATE_RETURN_TO_IDLE:
-                if(shooterReady()) {
+                if (shooterReady()) {
                     newState(State.STATE_IDLE);
                 }
                 break;
-
 
 
         }
