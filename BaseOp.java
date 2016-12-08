@@ -1,14 +1,23 @@
 package org.firstinspires.ftc.teamcode;
 
+import com.qualcomm.hardware.adafruit.BNO055IMU;
+import com.qualcomm.hardware.adafruit.JustLoggingAccelerationIntegrator;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorController;
 import com.qualcomm.robotcore.hardware.DeviceInterfaceModule;
-import com.qualcomm.robotcore.hardware.GyroSensor;
 import com.qualcomm.robotcore.hardware.OpticalDistanceSensor;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.ServoController;
+
+import org.firstinspires.ftc.robotcore.external.navigation.Acceleration;
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
+import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
+import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
+
+import java.util.Locale;
 
 /**
  * Created by Ultra on 9/29/2016
@@ -26,7 +35,7 @@ public class BaseOp extends OpMode {
     // Controllers
     DcMotorController frontController; // Motor Controller 1
     DcMotorController backController; // Motor Controller 2
-    DcMotorController shooterController; // Shooter Controller TODO: change this in robot config to "Shooter Controller"
+    DcMotorController shooterController; // Shooter Controller
     ServoController servoController; // Servo Controller 1
     DeviceInterfaceModule cdi; // Core Device Interface Module
 
@@ -46,12 +55,17 @@ public class BaseOp extends OpMode {
 
     ColorSensor redBlueSensor; // Adafruit RGBW sensor
     OpticalDistanceSensor odSensor; // Modern Robotics RGBW sensor
-    GyroSensor gyro; // Gyro
+    BNO055IMU imu; // Gyro
+    Orientation angles; // Gyro angles
+    Acceleration gravity; // Gyro gravity
 
     // Variables
     public int shooterTargetPosition = 0;
     public boolean shooting = false;
     public boolean loading = false;
+    double lastKnownRotJoy = 0.0;
+    double targetHeading = 0.0;
+    double currentGyroHeading = 0.0;
 
     public void init() { // runs when any OpMode is initalized, sets up everything needed to run robot
 
@@ -100,13 +114,20 @@ public class BaseOp extends OpMode {
         beaconPress = hardwareMap.servo.get("beaconPress"); // beacon presser servo
         beaconPress.setPosition(0.5); // TODO: Find right value for this
 
-        // TODO: enableLED doesn't seem to work, why?
         // Sensor block
         redBlueSensor = hardwareMap.colorSensor.get("redBlueSensor");
-
         odSensor = hardwareMap.opticalDistanceSensor.get("odSensor");
-        //gyro = hardwareMap.gyroSensor.get("gyro");
-        //initGyro();
+
+        // Gyro block
+        BNO055IMU.Parameters parameters = new BNO055IMU.Parameters();
+        parameters.angleUnit = BNO055IMU.AngleUnit.DEGREES;
+        parameters.accelUnit = BNO055IMU.AccelUnit.METERS_PERSEC_PERSEC;
+        parameters.calibrationDataFile = "AdafruitIMUCalibration.json"; // see the calibration sample opmode
+        parameters.loggingEnabled = false;
+        parameters.loggingTag = "IMU";
+        parameters.accelerationIntegrationAlgorithm = new JustLoggingAccelerationIntegrator();
+        imu = hardwareMap.get(BNO055IMU.class, "gyro");
+        imu.initialize(parameters);
 
     }
 
@@ -116,7 +137,6 @@ public class BaseOp extends OpMode {
 
         shooter.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
-        // TODO: Experiment with different increments
         if (gamepad2.dpad_up) { // bring shooter up by 25 ticks
             shooter.setTargetPosition(shooter.getCurrentPosition() + 25);
         }
@@ -128,7 +148,7 @@ public class BaseOp extends OpMode {
             shooter.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         }
         telemetry.addData("Shooter Position", shooter.getCurrentPosition());
-        telemetry.update();
+        //telemetry.update();
     }
 
     public void setAutoRunMode() { // sets things specific to autonomous
@@ -149,17 +169,15 @@ public class BaseOp extends OpMode {
     }
 
     public void loop() { // constantly running code
-        telemetry.addData("ShooterEncoderTarget", shooterTargetPosition);
-        telemetry.addData("ShooterEncoderPosition", shooter.getCurrentPosition());
-        updateTelemetry(telemetry);
-
+        angles = imu.getAngularOrientation().toAxesReference(AxesReference.INTRINSIC).toAxesOrder(AxesOrder.ZYX);
+        currentGyroHeading = Math.abs(angles.firstAngle % 360.0);
+        ////telemetry.update();
     }
 
     public boolean shooterReady() { // DO NOT TOUCH
         return shooter.getCurrentPosition() <= shooterTargetPosition + 10; // DO NOT TOUCH
     }
 
-    // TODO: Are there any improvements we can make here?
     public void manualFire() { // Teleop particle shooting
         shooter.setPower(1.0);
         shooter.setMode(DcMotor.RunMode.RUN_TO_POSITION);
@@ -197,6 +215,8 @@ public class BaseOp extends OpMode {
         double speed = 0;
         double direction = 0;
         double rotation = 0;
+
+        // Dpad drive
         if (gamepad1.dpad_up || gamepad1.dpad_down || gamepad1.dpad_left || gamepad1.dpad_right) {
             if (gamepad1.dpad_up) { // forwards
                 speed = 0.3;
@@ -211,15 +231,57 @@ public class BaseOp extends OpMode {
                 speed = 0.7;
                 direction = Math.PI * 1.75;
             }
-        } else {
-            speed = Math.hypot(gamepad1.left_stick_x, gamepad1.left_stick_y);
-            direction = Math.atan2(gamepad1.left_stick_y, -gamepad1.left_stick_x) - Math.PI / 4;
-            rotation = -gamepad1.right_stick_x;
+        }
+        // Joystick drive
+        else {
+            // left hand drive
+//            speed = Math.hypot(gamepad1.left_stick_x, gamepad1.left_stick_y);
+//            direction = Math.atan2(gamepad1.left_stick_y, -gamepad1.left_stick_x) - Math.PI / 4;
+//            rotation = -gamepad1.right_stick_x;
+
+            // right hand drive
+            speed = Math.hypot(gamepad1.right_stick_x, gamepad1.right_stick_y);
+            direction = Math.atan2(gamepad1.right_stick_y, -gamepad1.right_stick_x) - Math.PI / 4;
+            rotation = -gamepad1.left_stick_x;
         }
         MecanumDrive(speed, direction, rotation);
     }
 
+    private double rotationComp() {
+        double rotation = 0.0;
+        double gyro = currentGyroHeading;
+        double target = targetHeading;
+        double diff;
+        double epsilon = 2;
+        double minSpeed = 0.16;
+        double maxSpeed = 0.3;
+
+        if (target < 180) {
+            target += 360;
+        }
+        if (gyro < 180) {
+            gyro += 360;
+        }
+        diff = gyro - target;
+        if (Math.abs(diff) > epsilon) {
+
+            rotation = minSpeed + (Math.abs(diff) / 180) * (maxSpeed - minSpeed);
+            rotation = rotation * (diff / Math.abs(diff));
+        }
+        return rotation;
+    }
+
     protected void MecanumDrive(double speed, double direction, double rotation) {
+        if (rotation == 0.0) {
+            rotation = rotationComp();
+        }
+        
+        telemetry.addLine()
+                .addData("TargetHeading", targetHeading)
+                .addData("ActualHeading", currentGyroHeading);
+        telemetry.addLine()
+                .addData("rotation", rotation);
+
         final double v1 = speed * Math.cos(direction) + rotation;
         final double v2 = speed * Math.sin(direction) - rotation;
         final double v3 = speed * Math.sin(direction) + rotation;
@@ -231,17 +293,38 @@ public class BaseOp extends OpMode {
         rightBack.setPower(v4);
     }
 
-    /*
-
-    private void initGyro() {
-        telemetry.addData("3", "initGyro");
-        telemetry.update();
-        long startTime = System.currentTimeMillis();
-        gyro.calibrate(); // calibrate gyro on init TODO: How long does this take?
-        telemetry.addData("3", "gyroInitTimeMs" + (System.currentTimeMillis() - startTime));
-        telemetry.update();
+    // Gyro functions
+    String formatAngle(AngleUnit angleUnit, double angle) {
+        return formatDegrees(AngleUnit.DEGREES.fromUnit(angleUnit, angle));
     }
-    */
+
+    String formatDegrees(double degrees) {
+        return String.format(Locale.getDefault(), "%.1f", AngleUnit.DEGREES.normalize(degrees));
+    }
+
+    public void gyroTelemetry() {
+        telemetry.addLine()
+                .addData("heading", getHeading())
+                .addData("roll", getRoll())
+                .addData("pitch", getPitch());
+        telemetry.addLine()
+                .addData("miketest", angles.secondAngle);
+
+    }
+
+    public double getHeading() {
+        return Double.parseDouble(formatAngle(angles.angleUnit, angles.firstAngle));
+    }
+
+    public double getRoll() {
+        //return Double.parseDouble(formatAngle(angles.angleUnit, angles.secondAngle));
+        return 1.0;
+    }
+
+    public double getPitch() {
+        return Double.parseDouble(formatAngle(angles.angleUnit, angles.thirdAngle));
+    }
+
 
 }
 

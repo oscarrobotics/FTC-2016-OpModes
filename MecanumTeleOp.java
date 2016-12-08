@@ -3,7 +3,6 @@ package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.util.ElapsedTime;
-import com.qualcomm.robotcore.util.Range;
 
 /**
  * Created by Chris on 11/10/2016.
@@ -46,12 +45,20 @@ public class MecanumTeleOp extends BaseOp {
     @Override
     public void loop() {
         super.loop();
+
+        if (Math.abs(gamepad1.left_stick_x) < 0.1 && lastKnownRotJoy != 0.0) {
+            targetHeading = Math.abs(angles.firstAngle%360.0);
+        }
+        lastKnownRotJoy = gamepad1.left_stick_x;
+
         MecanumGamepadDrive();
         Shoot();
         Collect();
         Load();
         BeaconPress();
         fullAutoFire();
+
+
 
         telemetry.addData("1", beaconPress.getPosition());
     }
@@ -107,9 +114,16 @@ public class MecanumTeleOp extends BaseOp {
                 newState(State.STATE_WAIT_TO_SHOOT);
                 break;
 
+<<<<<<< HEAD
             case STATE_WAIT_TO_SHOOT: // loading is finished, move back servo for 100ms before firing
                 if(System.currentTimeMillis() >= timeAtStart + 500) {
                     loader.setPosition(0.15);
+=======
+            case STATE_WAIT_TO_SHOOT:
+                if(System.currentTimeMillis() >= timeAtStart + 1000) {
+                    loader.setPosition(0.2);
+                    shooterTargetPosition -= 3360;
+>>>>>>> origin/banks
                     shooter.setTargetPosition(shooterTargetPosition);
                     newState(State.STATE_INCREMENT_TARGET_POSITION);
                 }
