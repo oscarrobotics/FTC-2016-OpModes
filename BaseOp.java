@@ -2,10 +2,8 @@ package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.hardware.adafruit.BNO055IMU;
 import com.qualcomm.hardware.adafruit.JustLoggingAccelerationIntegrator;
-import com.qualcomm.hardware.ams.AMSColorSensor;
 import com.qualcomm.hardware.ams.AMSColorSensorImpl;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
-import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorController;
 import com.qualcomm.robotcore.hardware.DeviceInterfaceModule;
@@ -13,13 +11,9 @@ import com.qualcomm.robotcore.hardware.OpticalDistanceSensor;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.ServoController;
 
-import org.firstinspires.ftc.robotcore.external.navigation.Acceleration;
-import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
-
-import java.util.Locale;
 
 /**
  * Created by Ultra on 9/29/2016
@@ -224,22 +218,35 @@ public class BaseOp extends OpMode {
         double speed = 0;
         double direction = 0;
         double rotation = 0;
+        double maxIncrement = 179;
+
+        if (gamepad1.left_stick_x == 0 && lastKnownRotJoy != 0.0) {
+            targetHeading = currentGyroHeading;
+        }
+
+        lastKnownRotJoy = gamepad1.left_stick_x;
+
+        if (gamepad1.left_stick_x != 0) {
+            targetHeading = (currentGyroHeading + (maxIncrement * gamepad1.left_stick_x)) % 360;
+        }
+
 
         // DPad drive
         if (gamepad1.dpad_up || gamepad1.dpad_down || gamepad1.dpad_left || gamepad1.dpad_right) {
             if (gamepad1.dpad_up) { // forwards
                 speed = 0.3;
-                direction = Math.PI * 1.25;
+                direction = Math.atan2(-speed, 0) - Math.PI / 4;
             } else if (gamepad1.dpad_right) { // right
                 speed = 0.7;
-                direction = Math.PI * 0.75;
+                direction = Math.atan2(0, -speed) - Math.PI / 4;
             } else if (gamepad1.dpad_down) { // backwards
                 speed = 0.3;
-                direction = Math.PI * 0.25;
+                direction = Math.atan2(speed, 0) - Math.PI / 4;
             } else { // left
                 speed = 0.7;
-                direction = Math.PI * 1.75;
+                direction = Math.atan2(0, speed) - Math.PI / 4;
             }
+
         }
         // Joystick drive
         else {
@@ -252,8 +259,8 @@ public class BaseOp extends OpMode {
             speed = Math.hypot(gamepad1.right_stick_x, gamepad1.right_stick_y);
             direction = Math.atan2(gamepad1.right_stick_y, -gamepad1.right_stick_x) - Math.PI / 4;
             //rotation = -gamepad1.left_stick_x;
-            rotation = rotationComp();
         }
+        rotation = rotationComp();
         MecanumDrive(speed, direction, rotation);
     }
 
@@ -264,20 +271,10 @@ public class BaseOp extends OpMode {
         double posError = gyro - target;
         double epsilon = 4;
         double minSpeed = 0.16;
-        double maxSpeed = 0.3;
+        double maxSpeed = 1;
 
-<<<<<<< HEAD
         if (Math.abs(posError) > 180) {
             posError = -360 * Math.signum(posError) + posError;
-=======
-
-
-        if (target < 180) {
-            target += 360;
-        }
-        if (gyro < 180) {
-            gyro += 360;
->>>>>>> origin/gorg
         }
         if (Math.abs(posError) > epsilon) {
             rotation = minSpeed + (Math.abs(posError) / 180) * (maxSpeed - minSpeed);
@@ -287,10 +284,6 @@ public class BaseOp extends OpMode {
     }
 
     protected void MecanumDrive(double speed, double direction, double rotation) {
-        if (rotation == 0.0) {
-            rotation = rotationComp();
-        }
-        
         telemetry.addLine()
                 .addData("TargetHeading", targetHeading)
                 .addData("ActualHeading", currentGyroHeading);

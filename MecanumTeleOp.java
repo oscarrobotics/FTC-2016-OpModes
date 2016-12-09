@@ -45,21 +45,7 @@ public class MecanumTeleOp extends BaseOp {
     public void loop() {
         super.loop();
 
-<<<<<<< HEAD
-        if (Math.abs(gamepad1.left_stick_x) < 0.1 && lastKnownRotJoy != 0.0) {
-            targetHeading = Math.abs(angles.firstAngle % 360.0);
-        }
-=======
 
-
-//        if (Math.abs(gamepad1.left_stick_x) < 0.1 && lastKnownRotJoy != 0.0) {
-//            targetHeading = Math.abs(angles.firstAngle%360.0);
-//        }
-
-        targetHeading += gamepad1.left_stick_x * Math.PI * 0.0625;
-
->>>>>>> origin/gorg
-        lastKnownRotJoy = gamepad1.left_stick_x;
 
         MecanumGamepadDrive();
         Shoot();
@@ -94,7 +80,7 @@ public class MecanumTeleOp extends BaseOp {
         } else if (gamepad2.dpad_left) { // else if dpad_left pressed
             beaconPress.setPosition(1.0); // move servo to press left button
         } else {
-            beaconPress.setPosition(.5); // move back to static position
+            beaconPress.setPosition(.6); // move back to static position
         }
     }
 
@@ -113,7 +99,7 @@ public class MecanumTeleOp extends BaseOp {
         shooter.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         switch (mCurrentState) {
             case STATE_IDLE:
-                if (gamepad2.left_trigger > 0.5)
+                if(gamepad2.left_trigger > 0.5)
                     newState(State.STATE_LOADING);
                 break;
 
@@ -123,17 +109,12 @@ public class MecanumTeleOp extends BaseOp {
                 newState(State.STATE_WAIT_TO_SHOOT);
                 break;
 
-<<<<<<< HEAD
-            case STATE_WAIT_TO_SHOOT:
-                if (System.currentTimeMillis() >= timeAtStart + 1000) {
-                    loader.setPosition(0.2);
-=======
             case STATE_WAIT_TO_SHOOT: // loading is finished, move back servo for 100ms before firing
                 if(System.currentTimeMillis() >= timeAtStart + 500) {
                     loader.setPosition(0.15);
                     newState(State.STATE_INCREMENT_TARGET_POSITION);
                 }
-                    break;
+                break;
 
 //            case STATE_WAIT_TO_SHOOT:
 //                if(System.currentTimeMillis() >= timeAtStart + 1000) {
@@ -146,21 +127,22 @@ public class MecanumTeleOp extends BaseOp {
 
             case STATE_INCREMENT_TARGET_POSITION: //
                 if(System.currentTimeMillis() >= timeAtStart + 600) {
->>>>>>> origin/gorg
                     shooterTargetPosition -= 3360;
                     newState(State.STATE_RETURN_TO_IDLE);
                 }
                 break;
 
             case STATE_RETURN_TO_IDLE:
-                if (shooterReady()) {
+                if(shooterReady()) {
                     newState(State.STATE_IDLE);
                 }
                 break;
 
 
+
         }
     }
+
 
     private void newState(MecanumTeleOp.State newState) {
         // Reset the state time, and then change to next state.
@@ -168,7 +150,7 @@ public class MecanumTeleOp extends BaseOp {
         mCurrentState = newState;
     }
 
-    public void rotation(){
+    public void rotation() {
 
     }
 }
