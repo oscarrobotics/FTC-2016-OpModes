@@ -44,16 +44,12 @@ public class MecanumTeleOp extends BaseOp {
     @Override
     public void loop() {
         super.loop();
-
-
-
         MecanumGamepadDrive();
         Shoot();
         Collect();
         Load();
         BeaconPress();
         fullAutoFire();
-
 
         telemetry.addData("1", beaconPress.getPosition());
     }
@@ -148,9 +144,5 @@ public class MecanumTeleOp extends BaseOp {
         // Reset the state time, and then change to next state.
         mStateTime.reset();
         mCurrentState = newState;
-    }
-
-    public void rotation() {
-
     }
 }

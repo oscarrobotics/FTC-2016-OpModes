@@ -58,9 +58,13 @@ public class BaseOp extends OpMode {
     public int shooterTargetPosition = 0;
     public boolean shooting = false;
     public boolean loading = false;
+    public boolean isLeftHandDrive = true;
     double lastKnownRotJoy = 0.0;
     double targetHeading = 0.0;
     double currentGyroHeading = 0.0;
+    double rotStickX = 0;
+    double driveStickY = 0;
+    double driveStickX = 0;
 
     public void init() { // runs when any OpMode is initalized, sets up everything needed to run robot
 
@@ -126,8 +130,10 @@ public class BaseOp extends OpMode {
         parameters.loggingTag = "IMU";
         parameters.accelerationIntegrationAlgorithm = new JustLoggingAccelerationIntegrator();
         imu = hardwareMap.get(BNO055IMU.class, "gyro");
-        imu.initialize(parameters);
 
+        telemetry.addData("1", "init");
+        imu.initialize(parameters);
+        telemetry.addData("1", "done");
     }
 
     @Override
@@ -220,14 +226,25 @@ public class BaseOp extends OpMode {
         double rotation = 0;
         double maxIncrement = 179;
 
-        if (gamepad1.left_stick_x == 0 && lastKnownRotJoy != 0.0) {
+        if (isLeftHandDrive) {
+            rotStickX = gamepad1.right_stick_x;
+            driveStickX = gamepad1.left_stick_x;
+            driveStickY = gamepad1.left_stick_y;
+        } else {
+            rotStickX = gamepad1.left_stick_x;
+            driveStickX = gamepad1.right_stick_x;
+            driveStickY = gamepad1.right_stick_y;
+        }
+
+
+        if (rotStickX == 0 && lastKnownRotJoy != 0.0) {
             targetHeading = currentGyroHeading;
         }
 
-        lastKnownRotJoy = gamepad1.left_stick_x;
+        lastKnownRotJoy = rotStickX;
 
-        if (gamepad1.left_stick_x != 0) {
-            targetHeading = (currentGyroHeading + (maxIncrement * gamepad1.left_stick_x)) % 360;
+        if (rotStickX != 0) {
+            targetHeading = (currentGyroHeading + (maxIncrement * rotStickX)) % 360;
         }
 
 
@@ -250,15 +267,8 @@ public class BaseOp extends OpMode {
         }
         // Joystick drive
         else {
-            // left hand drive
-            // speed = Math.hypot(gamepad1.left_stick_x, gamepad1.left_stick_y);
-            // direction = Math.atan2(gamepad1.left_stick_y, -gamepad1.left_stick_x) - Math.PI / 4;
-            // rotation = -gamepad1.right_stick_x;
-
-            // right hand drive
-            speed = Math.hypot(gamepad1.right_stick_x, gamepad1.right_stick_y);
-            direction = Math.atan2(gamepad1.right_stick_y, -gamepad1.right_stick_x) - Math.PI / 4;
-            //rotation = -gamepad1.left_stick_x;
+            speed = Math.hypot(driveStickX, driveStickY);
+            direction = Math.atan2(driveStickY, -driveStickX) - Math.PI / 4;
         }
         rotation = rotationComp();
         MecanumDrive(speed, direction, rotation);
