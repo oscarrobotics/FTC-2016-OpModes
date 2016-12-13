@@ -16,19 +16,20 @@ public class OscarColorTest extends OpMode {
 
     @Override
     public void init() {
-        I2cDevice i2cDevice;
-        i2cDevice = hardwareMap.get(I2cDevice.class, "redBlueSensor"); // Use proper name here
-        AMSColorSensor.Parameters params = AMSColorSensor.Parameters.createForAdaFruit();
+
+        redBlueSensor  = (AMSColorSensor)hardwareMap.colorSensor.get("redBlueSensor"); // Use proper name here
+        /*AMSColorSensor.Parameters params = AMSColorSensor.Parameters.createForAdaFruit();
         params.integrationTime = AMSColorSensor.IntegrationTime.MS_24;
-        redBlueSensor = AMSColorSensorImpl.create(params, i2cDevice);
+        redBlueSensor.initialize(params);*/
     }
 
     @Override
     public void loop() {
         redBlueSensor.enableLed(gamepad1.x);
-        telemetry.addData("R", redBlueSensor.red());
-        telemetry.addData("G", redBlueSensor.green());
-        telemetry.addData("B", redBlueSensor.blue());
-        telemetry.addData("alpha", redBlueSensor.alpha());
+        telemetry.addLine()
+                .addData("R", redBlueSensor.red())
+                .addData("G", redBlueSensor.green())
+                .addData("B", redBlueSensor.blue())
+                .addData("alpha", redBlueSensor.alpha());
     }
 }
