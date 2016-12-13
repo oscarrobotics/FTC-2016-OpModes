@@ -279,7 +279,7 @@ public class BaseOp extends OpMode {
         double gyro = currentGyroHeading;
         double target = targetHeading;
         double posError = gyro - target;
-        double epsilon = 4;
+        double epsilon = 2;
         double minSpeed = 0.16;
         double maxSpeed = 1;
 
