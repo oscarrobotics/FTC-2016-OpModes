@@ -16,7 +16,7 @@ import org.firstinspires.ftc.teamcode.BaseOp;
 import java.util.Locale;
 
 @TeleOp(name = "Sensor: Oscar IMU", group = "Oscar")
-@Disabled
+//@Disabled
 public class OscarIMU extends BaseOp {
 
     BNO055IMU imu;

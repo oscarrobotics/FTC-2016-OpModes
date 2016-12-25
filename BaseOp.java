@@ -66,6 +66,32 @@ public class BaseOp extends OpMode {
     double driveStickY = 0;
     double driveStickX = 0;
 
+    // Mecanum variables
+    double speed = 0;
+    double direction = 0;
+    double rotation = 0;
+    int target = 0;
+    boolean doneDriving = false;
+    int targetDestination = 0;
+
+
+    public double forwardMove(double speed) {
+        return Math.atan2(-speed, 0) - Math.PI / 4;
+    }
+
+    public double backwardMove(double speed) {
+        return Math.atan2(speed, 0) - Math.PI / 4;
+    }
+
+    public double rightMove(double speed) {
+        return Math.atan2(0, -speed) - Math.PI / 4;
+    }
+
+    public double leftMove(double speed) {
+        return Math.atan2(0, speed) - Math.PI / 4;
+    }
+
+
     public void init() { // runs when any OpMode is initalized, sets up everything needed to run robot
 
         // Controller/Module block
@@ -91,18 +117,22 @@ public class BaseOp extends OpMode {
         collector.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
 
         rightFront = hardwareMap.dcMotor.get("rightFront");
+        rightFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         rightFront.setDirection(DcMotor.Direction.FORWARD);
         rightFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         rightBack = hardwareMap.dcMotor.get("rightBack");
+        rightBack.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         rightBack.setDirection(DcMotor.Direction.FORWARD);
         rightBack.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         leftFront = hardwareMap.dcMotor.get("leftFront");
+        leftFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         leftFront.setDirection(DcMotor.Direction.REVERSE);
         leftFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         leftBack = hardwareMap.dcMotor.get("leftBack");
+        leftBack.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         leftBack.setDirection(DcMotor.Direction.REVERSE);
         leftBack.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
@@ -150,33 +180,22 @@ public class BaseOp extends OpMode {
         }
 
         if (gamepad2.start || gamepad1.start) {
+            shooterTargetPosition = 0;
             shooter.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         }
         telemetry.addData("Shooter Position", shooter.getCurrentPosition());
         //telemetry.update();
     }
 
-    public void setAutoRunMode() { // sets things specific to autonomous
-        rightFront.setMode(DcMotor.RunMode.RUN_TO_POSITION); // sets the encoders to the right mode, tells the motor to run to the position it is given
-        rightBack.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        leftFront.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        leftBack.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        shooter.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+    public void setRunMode() { // sets things specific to autonomous
+
     }
 
-    public void setTeleRunMode() { // sets things specific to teleop
-        rightFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER); // tells the motors to use encoders
-        rightBack.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        leftFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        leftBack.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        shooter.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        shooter.setPower(1.0);
-    }
 
     public void loop() { // constantly running code
         telemetry.addLine()
-                .addData("ShooterPos", shooter.getCurrentPosition())
-                .addData("Target", shooterTargetPosition);
+                .addData("1", "ShooterPos", shooter.getCurrentPosition())
+                .addData("1", "Target", shooterTargetPosition);
 
         angles = imu.getAngularOrientation().toAxesReference(AxesReference.INTRINSIC).toAxesOrder(AxesOrder.ZYX);
         currentGyroHeading = Math.abs(angles.firstAngle % 360.0);
@@ -212,19 +231,9 @@ public class BaseOp extends OpMode {
         }
     }
 
-    protected void stopDriving() {
-        leftBack.setPower(0.0);
-        leftFront.setPower(0.0);
-        rightBack.setPower(0.0);
-        rightFront.setPower(0.0);
-    }
-
-
     protected void MecanumGamepadDrive() {
-        double speed = 0;
-        double direction = 0;
-        double rotation = 0;
-        double maxIncrement = 179;
+        target = 0;
+        double maxIncrement = 100;
 
         if (isLeftHandDrive) {
             rotStickX = gamepad1.right_stick_x;
@@ -235,6 +244,7 @@ public class BaseOp extends OpMode {
             driveStickX = gamepad1.right_stick_x;
             driveStickY = gamepad1.right_stick_y;
         }
+        rotStickX = Math.pow(rotStickX, 3);
 
 
         if (rotStickX == 0 && lastKnownRotJoy != 0.0) {
@@ -263,24 +273,63 @@ public class BaseOp extends OpMode {
                 speed = 0.7;
                 direction = Math.atan2(0, speed) - Math.PI / 4;
             }
-
         }
         // Joystick drive
         else {
             speed = Math.hypot(driveStickX, driveStickY);
             direction = Math.atan2(driveStickY, -driveStickX) - Math.PI / 4;
         }
-        rotation = rotationComp();
-        MecanumDrive(speed, direction, rotation);
+
+        MecanumDrive(speed, direction, rotation, target);
     }
 
-    private double rotationComp() {
+    protected boolean MecanumDrive(double speed, double direction, double rotation, int target) {
+
+        if (rotation == 0) {
+            rotation = rotationComp();
+        }
+
+
+        if (target != 0 && targetDestination == 0) {
+            targetDestination = leftFront.getCurrentPosition() + target;
+        }
+
+        /*telemetry.addLine()
+                .addData("3", "TargetHeading", targetHeading)
+                .addData("3", "ActualHeading", currentGyroHeading);
+        telemetry.addLine()
+                .addData("4", "rotation", rotation);*/
+
+        telemetry.addLine()
+                .addData("Actual", leftFront.getCurrentPosition())
+                .addData("Dest", targetDestination);
+
+
+        final double v1 = speed * Math.cos(direction) + rotation;
+        final double v2 = speed * Math.sin(direction) - rotation;
+        final double v3 = speed * Math.sin(direction) + rotation;
+        final double v4 = speed * Math.cos(direction) - rotation;
+
+        leftFront.setPower(v1);
+        rightFront.setPower(v2);
+        leftBack.setPower(v3);
+        rightBack.setPower(v4);
+
+        if (targetDestination != 0 && Math.abs(leftFront.getCurrentPosition() - targetDestination) < 100) {
+            targetDestination = 0;
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    protected double rotationComp() {
         double rotation = 0.0;
         double gyro = currentGyroHeading;
         double target = targetHeading;
         double posError = gyro - target;
-        double epsilon = 2;
-        double minSpeed = 0.16;
+        double epsilon = 4;
+        double minSpeed = 0.12;
         double maxSpeed = 1;
 
         if (Math.abs(posError) > 180) {
@@ -292,24 +341,4 @@ public class BaseOp extends OpMode {
         }
         return rotation;
     }
-
-    protected void MecanumDrive(double speed, double direction, double rotation) {
-        telemetry.addLine()
-                .addData("TargetHeading", targetHeading)
-                .addData("ActualHeading", currentGyroHeading);
-        telemetry.addLine()
-                .addData("rotation", rotation);
-
-        final double v1 = speed * Math.cos(direction) + rotation;
-        final double v2 = speed * Math.sin(direction) - rotation;
-        final double v3 = speed * Math.sin(direction) + rotation;
-        final double v4 = speed * Math.cos(direction) - rotation;
-
-        leftFront.setPower(v1);
-        rightFront.setPower(v2);
-        leftBack.setPower(v3);
-        rightBack.setPower(v4);
-    }
 }
-
-

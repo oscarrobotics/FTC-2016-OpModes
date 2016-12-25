@@ -3,20 +3,7 @@ package org.firstinspires.ftc.teamcode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
-import static org.firstinspires.ftc.teamcode.AutoStates.State.STATE_CENTER_WHITE_LINE1;
-import static org.firstinspires.ftc.teamcode.AutoStates.State.STATE_CENTER_WHITE_LINE2;
-import static org.firstinspires.ftc.teamcode.AutoStates.State.STATE_DETECT_COLOR;
-import static org.firstinspires.ftc.teamcode.AutoStates.State.STATE_DETECT_COLOR_2;
-import static org.firstinspires.ftc.teamcode.AutoStates.State.STATE_DRIVE_WHITE_LINE1;
-import static org.firstinspires.ftc.teamcode.AutoStates.State.STATE_DRIVE_WHITE_LINE2;
-import static org.firstinspires.ftc.teamcode.AutoStates.State.STATE_FIRST_DRIVE;
-import static org.firstinspires.ftc.teamcode.AutoStates.State.STATE_FIRST_LOAD;
-import static org.firstinspires.ftc.teamcode.AutoStates.State.STATE_FIRST_SHOT;
-import static org.firstinspires.ftc.teamcode.AutoStates.State.STATE_GO_TO_BEACON1;
-import static org.firstinspires.ftc.teamcode.AutoStates.State.STATE_GO_TO_BEACON2;
-import static org.firstinspires.ftc.teamcode.AutoStates.State.STATE_SECOND_SHOT;
-import static org.firstinspires.ftc.teamcode.AutoStates.State.STATE_WAIT_FOR_FIRST_DRIVE;
-import static org.firstinspires.ftc.teamcode.AutoStates.State.STATE_WAIT_FOR_LOAD;
+import static org.firstinspires.ftc.teamcode.AutoStates.State.*;
 
 @com.qualcomm.robotcore.eventloop.opmode.Autonomous(name = "Oscar: AutoStates", group = "Oscar")
 public class AutoStates extends BaseOp {
@@ -24,16 +11,22 @@ public class AutoStates extends BaseOp {
     public double drivePower;
     public boolean doneShooting;
     public double startTime;
+    public double target1;
+    public double speed;
+    public double direction;
 
     public enum State { // Ideally, these stay in order of how we use them
         STATE_INITIAL,
-        STATE_FIRST_DRIVE,
+        STATE_MOVE_FROM_WALL,
         STATE_WAIT_FOR_FIRST_DRIVE,
         STATE_FIRST_SHOT,
         STATE_FIRST_LOAD,
         STATE_WAIT_FOR_LOAD,
         STATE_SECOND_SHOT,
-        STATE_MOVE_FROM_WALL,
+        STATE_DRIVE_BACKWARDS1,
+        STATE_TURN_45_1,
+        STATE_DRIVE_BACKWARDS2,
+        STATE_TURN_45_2,
         STATE_DRIVE_WHITE_LINE1,
         STATE_DRIVE_WHITE_LINE2,
         STATE_GO_TO_BEACON1,
@@ -80,56 +73,33 @@ public class AutoStates extends BaseOp {
         beaconPress.setPosition(0.5);
         timesMoved = 0;
 
-
-        // Init other stuff
-        rightFront.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER); // zeroes encoders
-        rightBack.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        leftFront.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        leftBack.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        shooter.setMode(DcMotor.RunMode.RUN_USING_ENCODER); // what purpose does this serve?
-        rightFront.setTargetPosition((rightFront.getCurrentPosition()));
-        rightBack.setTargetPosition((rightBack.getCurrentPosition())); // sets the target position of the encoders to the current position + target position
-        leftFront.setTargetPosition(leftFront.getCurrentPosition());
-        leftBack.setTargetPosition(leftBack.getCurrentPosition());
-        beaconPress.setPosition(0.5);
-
-        // Init commands
-        setAutoRunMode();
-        init_loop();
+        // Init commands TODO: what am i?
+        // init_loop();
     }
 
     public void loop() {
         loopCounter++;
 
         super.loop();
-
         // Telemetry block
-        telemetry.addData("0", "Loop count " + loopCounter);
-        //telemetry.update(); // update telemetry
+        telemetry.addLine()
+                .addData("Loop count", loopCounter)
+                .addData("State", mCurrentState);
 
         switch (mCurrentState) {
             case STATE_INITIAL:
                 // do nothing (for now)
-                newState(STATE_FIRST_DRIVE);
+                newState(STATE_MOVE_FROM_WALL);
                 break;
 
-            case STATE_FIRST_DRIVE:
-                rightFront.setPower(1);
-                rightBack.setPower(-1);
-                leftFront.setPower(-1);
-                leftBack.setPower(1);
-                startTime = System.currentTimeMillis();
-                newState(STATE_WAIT_FOR_FIRST_DRIVE);
-                break;
-
-            case STATE_WAIT_FOR_FIRST_DRIVE:
-                if(System.currentTimeMillis()> startTime + 2500){
-                    rightFront.setPower(0);
-                    rightBack.setPower(0);
-                    leftFront.setPower(0);
-                    leftBack.setPower(0);
+            case STATE_MOVE_FROM_WALL:
+                speed = 0.2;
+                if (MecanumDrive(speed, rightMove(speed), rotationComp(), -1000)) {
                     newState(STATE_FIRST_SHOT);
+                    MecanumDrive(0, 0, rotationComp(), 0);
                 }
+                break;
+
             case STATE_FIRST_SHOT:
                 if (particlesShot == 0) {
                     chrisAutoShoot();
@@ -159,19 +129,47 @@ public class AutoStates extends BaseOp {
                     chrisAutoShoot();
                     particlesShot++;
                 } else {
-                    newState(STATE_DRIVE_WHITE_LINE1);
-                    odSensor.enableLed(true);
-                    //MecanumDrive(0.2, 0.5, 1.0);
+                    newState(STATE_DRIVE_BACKWARDS1);
                 }
                 break;
 
-            case STATE_MOVE_FROM_WALL:
-                newState(STATE_DRIVE_WHITE_LINE1);
+            case STATE_DRIVE_BACKWARDS1:
+                speed = 0.5;
+                if (MecanumDrive(speed, backwardMove(speed), rotationComp(), 2000)) {
+                    newState(STATE_TURN_45_1);
+                    MecanumDrive(0, 0, rotationComp(), 0);
+                }
+
+
                 break;
+
+            case STATE_TURN_45_1:
+                targetHeading = 317;
+                MecanumDrive(0, 0, rotationComp(), 0);
+                if (gyroCloseEnough(3)) {
+                    newState(STATE_DRIVE_BACKWARDS2);
+                }
+                break;
+
+            case STATE_DRIVE_BACKWARDS2:
+                if (MecanumDrive(speed, backwardMove(speed), rotationComp(), 4000)) {
+                    newState(STATE_TURN_45_2);
+                    MecanumDrive(0, 0, rotationComp(), 0);
+                }
+                break;
+
+            case STATE_TURN_45_2:
+                targetHeading = 270;
+                MecanumDrive(0, 0, rotationComp(), 0);
+                if (gyroCloseEnough(3)) {
+                    newState(STATE_DRIVE_WHITE_LINE1);
+                }
+                break;
+
 
             case STATE_DRIVE_WHITE_LINE1:
                 if (odSensor.getLightDetected() >= .5) {
-                    stopDriving();
+                    //MecanumDrive(0, 0, 0, 0);
                     newState(STATE_CENTER_WHITE_LINE1);
                 }
                 break;
@@ -245,7 +243,15 @@ public class AutoStates extends BaseOp {
         mCurrentState = newState;
     }
 
+    public void driveSideways(int target) {
+        speed = 0.5;
 
+        //MecanumDrive(speed, direction, rotation, target);
+    }
+
+    public boolean gyroCloseEnough(double epsilon) {
+        return Math.abs(currentGyroHeading - targetHeading) < epsilon;
+    }
 }
 
 
