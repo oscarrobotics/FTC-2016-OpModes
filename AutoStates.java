@@ -14,6 +14,9 @@ public class AutoStates extends BaseOp {
     public double target1;
     public double speed;
     public double direction;
+    public int whiteLineFirstEdge;
+    public int whiteLineBackEdge;
+    public int distanceWhiteLineCenter;
 
     public enum State { // Ideally, these stay in order of how we use them
         STATE_INITIAL,
@@ -27,16 +30,19 @@ public class AutoStates extends BaseOp {
         STATE_TURN_45_1,
         STATE_DRIVE_BACKWARDS2,
         STATE_TURN_45_2,
-        STATE_DRIVE_WHITE_LINE1,
-        STATE_DRIVE_WHITE_LINE2,
+        STATE_FIND_WHITE_LINE1_FRONT,
+        STATE_FIND_WHITE_LINE1_BACK,
+        STATE_FIND_WHITE_LINE1_CENTER,
+
         STATE_GO_TO_BEACON1,
         STATE_PRESSING_BEACON1,
-        STATE_CENTER_WHITE_LINE1,
         STATE_DETECT_COLOR,
         STATE_PUSHING_LEFT,
         STATE_PUSHING_RIGHT,
-        STATE_CENTER_WHITE_LINE2,
         STATE_GO_TO_BEACON2,
+        STATE_FIND_WHITE_LINE2_FRONT,
+        STATE_FIND_WHITE_LINE2_BACK,
+        STATE_FIND_WHITE_LINE2_CENTER,
         STATE_DETECT_COLOR_2,
         STATE_PRESSING_BEACON2,
         STATE_STOP
@@ -162,25 +168,42 @@ public class AutoStates extends BaseOp {
                 targetHeading = 270;
                 MecanumDrive(0, 0, rotationComp(), 0);
                 if (gyroCloseEnough(3)) {
-                    newState(STATE_DRIVE_WHITE_LINE1);
+                    MecanumDrive(1,0,rotationComp(),0);
+                    newState(STATE_FIND_WHITE_LINE1_FRONT);
                 }
                 break;
 
 
-            case STATE_DRIVE_WHITE_LINE1:
+            case STATE_FIND_WHITE_LINE1_FRONT:
                 if (odSensor.getLightDetected() >= .5) {
-                    //MecanumDrive(0, 0, 0, 0);
-                    newState(STATE_CENTER_WHITE_LINE1);
+                    MecanumDrive(0,0,rotationComp(),0);
+                    newState(STATE_GO_TO_BEACON1);
                 }
-                break;
 
-            case STATE_CENTER_WHITE_LINE1:
-                newState(STATE_GO_TO_BEACON1);
                 break;
 
             case STATE_GO_TO_BEACON1:
-                //add code to drive left
-                newState(STATE_DETECT_COLOR);
+                if (MecanumDrive(1,leftMove(speed),rotationComp(),560)){
+                    whiteLineFirstEdge = leftFront.getCurrentPosition();
+                    MecanumDrive(0,0,rotationComp(),0);
+                    newState(STATE_FIND_WHITE_LINE1_BACK);
+                }
+                break;
+
+            case STATE_FIND_WHITE_LINE1_BACK:
+                if (odSensor.getLightDetected() < .5) {
+                    MecanumDrive(0, 0, rotationComp(), 0);
+                    whiteLineBackEdge = leftFront.getCurrentPosition();
+                    distanceWhiteLineCenter = (whiteLineBackEdge - whiteLineFirstEdge)/2;
+                    newState(STATE_FIND_WHITE_LINE1_CENTER);
+                }
+                break;
+
+            case STATE_FIND_WHITE_LINE1_CENTER:
+                if (MecanumDrive(.25,0,rotationComp(),distanceWhiteLineCenter)){
+                    MecanumDrive(0,0,rotationComp(),0);
+                    newState(STATE_DETECT_COLOR);
+                }
                 break;
 
             case STATE_DETECT_COLOR:
@@ -188,16 +211,20 @@ public class AutoStates extends BaseOp {
                     beaconPress.setPosition(.75);
                 else
                     beaconPress.setPosition(.25);
-                newState(STATE_DRIVE_WHITE_LINE2);
+                newState(STATE_PRESSING_BEACON1);
                 break;
 
-            case STATE_DRIVE_WHITE_LINE2:
-                //Drive forward code goes here
-                newState(STATE_CENTER_WHITE_LINE2);
+            case STATE_PRESSING_BEACON1:
+                if(beaconPress.getPosition()== .25 || beaconPress.getPosition() == 75)
+                newState(STATE_FIND_WHITE_LINE2_FRONT);
+
+            case STATE_FIND_WHITE_LINE2_FRONT:
+
+                newState(STATE_FIND_WHITE_LINE2_BACK);
 
                 break;
 
-            case STATE_CENTER_WHITE_LINE2:
+            case STATE_FIND_WHITE_LINE2_BACK:
                 newState(STATE_GO_TO_BEACON2);
                 break;
 
@@ -220,7 +247,7 @@ public class AutoStates extends BaseOp {
 
     }
 
-    public void chrisAutoShoot() {
+    public void chrisAutoShootOld() {
         shooter.setPower(1.0);
         shooter.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         shooterTargetPosition -= 3360;
@@ -229,6 +256,14 @@ public class AutoStates extends BaseOp {
         } while (shooter.getCurrentPosition() >= shooterTargetPosition + 10);
     }
 
+    public void chrisAutoShoot() {
+        shooter.setPower(1.0);
+        shooter.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        shooterTargetPosition -= 3360;
+        shooter.setTargetPosition(shooterTargetPosition);
+
+         while (shooter.isBusy());
+    }
 
     public void chrisAutoLoad() { // make sure servo is initialized to .15
         do {

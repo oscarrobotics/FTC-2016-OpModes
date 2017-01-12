@@ -203,7 +203,8 @@ public class BaseOp extends OpMode {
     }
 
     public boolean shooterReady() { // DO NOT TOUCH
-        return shooter.getCurrentPosition() <= shooterTargetPosition + 10; // DO NOT TOUCH
+        return !shooter.isBusy();
+        //return shooter.getCurrentPosition() <= shooterTargetPosition + 10; // DO NOT TOUCH
     }
 
     public void manualFire() { // Teleop particle shooting
