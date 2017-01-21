@@ -72,11 +72,11 @@ public class MecanumTeleOp extends BaseOp {
 
     public void BeaconPress() {
         if (gamepad2.dpad_right) { // if dpad_right pressed
-            beaconPress.setPosition(0.0); // move servo to press right button
+            beaconPress.setPosition(servoRight); // move servo to press right button
         } else if (gamepad2.dpad_left) { // else if dpad_left pressed
-            beaconPress.setPosition(1.0); // move servo to press left button
+            beaconPress.setPosition(servoLeft); // move servo to press left button
         } else {
-            beaconPress.setPosition(.6); // move back to static position
+            beaconPress.setPosition(servoCenter); // move back to static position
         }
     }
 

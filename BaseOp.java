@@ -2,8 +2,8 @@ package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.hardware.adafruit.BNO055IMU;
 import com.qualcomm.hardware.adafruit.JustLoggingAccelerationIntegrator;
-import com.qualcomm.hardware.ams.AMSColorSensorImpl;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
+import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorController;
 import com.qualcomm.robotcore.hardware.DeviceInterfaceModule;
@@ -48,8 +48,7 @@ public class BaseOp extends OpMode {
     Servo beaconPress; // beacon presser servo
 
     // Sensors
-    AMSColorSensorImpl redBlueSensor;
-    // ColorSensor redBlueSensor; // Adafruit RGBW sensor
+    ColorSensor redBlueSensor; // Adafruit RGBW sensor
     OpticalDistanceSensor odSensor; // Modern Robotics RGBW sensor
     BNO055IMU imu; // Gyro
     Orientation angles; // Gyro angles
@@ -65,6 +64,9 @@ public class BaseOp extends OpMode {
     double rotStickX = 0;
     double driveStickY = 0;
     double driveStickX = 0;
+    public final double servoCenter = .6;
+    public final double servoRight = 0;
+    public final double servoLeft = 1;
 
     // Mecanum variables
     double speed = 0;
@@ -141,7 +143,7 @@ public class BaseOp extends OpMode {
         loader.setPosition(0.0); // TODO: Find right value for this
 
         beaconPress = hardwareMap.servo.get("beaconPress"); // beacon presser servo
-        beaconPress.setPosition(0.5); // TODO: Find right value for this
+        beaconPress.setPosition(servoCenter); // TODO: Find right value for this
 
         // Sensor block
 
@@ -150,6 +152,7 @@ public class BaseOp extends OpMode {
         redBlueSensor.initialize(params);
 */
         odSensor = hardwareMap.opticalDistanceSensor.get("odSensor");
+        redBlueSensor = hardwareMap.colorSensor.get("redBlueSensor");
 
         // Gyro block
         BNO055IMU.Parameters parameters = new BNO055IMU.Parameters();
@@ -181,7 +184,9 @@ public class BaseOp extends OpMode {
 
         if (gamepad2.start || gamepad1.start) {
             shooterTargetPosition = 0;
+            shooter.setTargetPosition(0);
             shooter.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+            shooter.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         }
         telemetry.addData("Shooter Position", shooter.getCurrentPosition());
         //telemetry.update();
@@ -194,8 +199,8 @@ public class BaseOp extends OpMode {
 
     public void loop() { // constantly running code
         telemetry.addLine()
-                .addData("1", "ShooterPos", shooter.getCurrentPosition())
-                .addData("1", "Target", shooterTargetPosition);
+                .addData("ShooterPos", shooter.getCurrentPosition())
+                .addData("Target", shooterTargetPosition);
 
         angles = imu.getAngularOrientation().toAxesReference(AxesReference.INTRINSIC).toAxesOrder(AxesOrder.ZYX);
         currentGyroHeading = Math.abs(angles.firstAngle % 360.0);
