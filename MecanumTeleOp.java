@@ -48,8 +48,9 @@ public class MecanumTeleOp extends BaseOp {
         Shoot();
         Collect();
         Load();
-        BeaconPress();
+        //BeaconPress();
         fullAutoFire();
+        extendBeaconPress();
 
         telemetry.addData("1", beaconPress.getPosition());
     }
@@ -66,17 +67,6 @@ public class MecanumTeleOp extends BaseOp {
         } else {
             loader.setPosition(0.15); // move back to static position
 
-        }
-    }
-
-
-    public void BeaconPress() {
-        if (gamepad2.dpad_right) { // if dpad_right pressed
-            beaconPress.setPosition(servoRight); // move servo to press right button
-        } else if (gamepad2.dpad_left) { // else if dpad_left pressed
-            beaconPress.setPosition(servoLeft); // move servo to press left button
-        } else {
-            beaconPress.setPosition(servoCenter); // move back to static position
         }
     }
 
@@ -145,4 +135,31 @@ public class MecanumTeleOp extends BaseOp {
         mStateTime.reset();
         mCurrentState = newState;
     }
+
+    private void extendBeaconPress(){
+        boolean seeingRed = redBlueSensor.red() > redBlueSensor.blue() + colorSensorMargin;
+        boolean seeingBlue = redBlueSensor.blue() > redBlueSensor.red() + colorSensorMargin;
+
+        if (gamepad2.x)
+            toggle = false;
+        if (gamepad2.y)
+            toggle = true;
+
+        cdi.setLED(1, seeingRed);
+        cdi.setLED(0, seeingBlue);
+
+        boolean correctColor = (toggle && redBlueSensor.red() > redBlueSensor.blue() + colorSensorMargin) ||
+                                (!toggle && redBlueSensor.blue()> redBlueSensor.red() + colorSensorMargin);
+        if (correctColor) {
+            beaconPress.setPosition(servoExtend);
+            bringBackInAt = System.currentTimeMillis() + 1500;
+            }
+        else {
+            if (bringBackInAt < System.currentTimeMillis()) {
+                beaconPress.setPosition(servoIn);
+            }
+        }
+
+    }
+
 }

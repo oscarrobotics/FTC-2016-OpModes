@@ -41,7 +41,7 @@ import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DeviceInterfaceModule;
 import com.qualcomm.robotcore.hardware.DigitalChannelController;
 
-@com.qualcomm.robotcore.eventloop.opmode.Autonomous(name = "Sensor: AdafruitRGB", group = "Oscar")
+@com.qualcomm.robotcore.eventloop.opmode.TeleOp(name = "Sensor: AdafruitRGB", group = "Oscar")
 public class SensorAdafruitRGB extends LinearOpMode {
 
   ColorSensor sensorRGB;
