@@ -64,15 +64,16 @@ public class BaseOp extends OpMode {
     double rotStickX = 0;
     double driveStickY = 0;
     double driveStickX = 0;
-    public final double servoIn = .7;
-    public final double servoExtend = .25;
+    public final double servoIn = 1;
+    public final double servoExtend = .50;
+    public final double servoOpposite = .15;
     public final double colorSensorMargin = 100;
     protected boolean isRed = false;
     public final double LIGHT_SENSOR_VAL = 0.1;
     public long bringBackInAt = 0;
     public boolean toggle = false; // 0 for blue, 1 for red
-
-
+    public boolean toggleDebug = false; //toggles through the button presser states
+    public boolean leftBumperPressed = false;
 
     // Mecanum variables
     double speed = 0;

@@ -19,7 +19,6 @@ public class AutoStates extends BaseOp {
     public int distanceWhiteLineCenter;
 
 
-
     public enum State { // Ideally, these stay in order of how we use them
         STATE_INITIAL,
         STATE_MOVE_FROM_WALL,
@@ -32,28 +31,13 @@ public class AutoStates extends BaseOp {
         STATE_TURN_45_1,
         STATE_DRIVE_BACKWARDS2,
         STATE_TURN_45_2,
-        STATE_FIND_WHITE_LINE1_FRONT,
-        STATE_GIVE_ROOM_FOR_ERROR1,
-        STATE_GO_TO_WHITE_LINE1,
-        STATE_FIND_WHITE_LINE1_BACK,
-        STATE_FIND_WHITE_LINE1_CENTER,
-        STATE_GO_TO_BEACON1,
-        STATE_PRESSING_BEACON1,
-        STATE_DETECT_COLOR,
-        STATE_DRIVE_FROM_LINE1,
-        STATE_GO_TO_BEACON2,
-        STATE_FIND_WHITE_LINE2_FRONT,
-        STATE_GIVE_ROOM_FOR_ERROR2,
-        STATE_GO_TO_WHITE_LINE2,
-        STATE_ALIGN_WHITE_LINE2,
-        STATE_FIND_WHITE_LINE2_CENTER,
-        STATE_DETECT_COLOR_2,
-        STATE_PRESSING_BEACON2,
+        STATE_MOVE_LEFT,
+        STATE_DRIVE_FOR_BEACON1,
+        STATE_DRIVE_IN_BETWEEN_BEACONS,
+        STATE_DRIVE_FOR_BEACON2,
         STATE_CAP_DRIVE1,
         STATE_CAP_TURN1,
         STATE_CAP_DRIVE2,
-        STATE_WAIT_FOR_WHITE_LINE1,
-        STATE_WAIT_FOR_WHITE_LINE2,
         STATE_STOP
     }
 
@@ -61,7 +45,7 @@ public class AutoStates extends BaseOp {
     private State mCurrentState;
     private boolean yPressed = false;
 
-    public enum autoMode{
+    public enum autoMode {
         MODE_DRIVE_BEACONS,
         MODE_PUSH_CAP_BALL,
         MODE_SHOOT_ONLY,
@@ -75,14 +59,23 @@ public class AutoStates extends BaseOp {
     public void init_loop() {
         super.init_loop();
 
-        if (gamepad2.y && !yPressed)
-        {
+        if (gamepad2.y && !yPressed) {
             switch (currentMode) {
-                case MODE_DRIVE_BEACONS: currentMode = autoMode.MODE_PUSH_CAP_BALL; break;
-                case MODE_PUSH_CAP_BALL: currentMode = autoMode.MODE_SHOOT_ONLY; break;
-                case MODE_SHOOT_ONLY: currentMode = autoMode.MODE_COLOR_TEST; break;
-                case MODE_COLOR_TEST: currentMode = autoMode.MODE_WHITE_LINE_TEST; break;
-                case MODE_WHITE_LINE_TEST: currentMode = autoMode.MODE_DRIVE_BEACONS; break;
+                case MODE_DRIVE_BEACONS:
+                    currentMode = autoMode.MODE_PUSH_CAP_BALL;
+                    break;
+                case MODE_PUSH_CAP_BALL:
+                    currentMode = autoMode.MODE_SHOOT_ONLY;
+                    break;
+                case MODE_SHOOT_ONLY:
+                    currentMode = autoMode.MODE_COLOR_TEST;
+                    break;
+                case MODE_COLOR_TEST:
+                    currentMode = autoMode.MODE_WHITE_LINE_TEST;
+                    break;
+                case MODE_WHITE_LINE_TEST:
+                    currentMode = autoMode.MODE_DRIVE_BEACONS;
+                    break;
             }
 
         }
@@ -91,8 +84,8 @@ public class AutoStates extends BaseOp {
 
         if (gamepad2.b) isRed = true;
         if (gamepad2.x) isRed = false;
-        telemetry.addData("2",currentMode);
-        telemetry.addData("3",isRed?"RedSide":"BlueSide");
+        telemetry.addData("2", currentMode);
+        telemetry.addData("3", isRed ? "RedSide" : "BlueSide");
     }
 
     @Override
@@ -124,13 +117,14 @@ public class AutoStates extends BaseOp {
 
     public void loop() {
         loopCounter++;
-        boolean extendBeaconPress = (isRed && redBlueSensor.blue()+ colorSensorMargin < redBlueSensor.red() ||
-                                    (!isRed && redBlueSensor.blue() > redBlueSensor.red() + colorSensorMargin));
-        if (extendBeaconPress)
+        boolean extendBeaconPress = (isRed && redBlueSensor.blue() + colorSensorMargin < redBlueSensor.red() ||
+                (!isRed && redBlueSensor.blue() > redBlueSensor.red() + colorSensorMargin));
+        if (extendBeaconPress) {
             beaconPress.setPosition(servoExtend);
-        else
+            bringBackInAt = System.currentTimeMillis() + 1000;
+        } else if (bringBackInAt < System.currentTimeMillis()) {
             beaconPress.setPosition(servoIn);
-
+        }
         super.loop();
         // Telemetry block
         telemetry.addLine()
@@ -139,11 +133,7 @@ public class AutoStates extends BaseOp {
         telemetry.addData("3", "Light detected: " + odSensor.getLightDetected());
         switch (mCurrentState) {
             case STATE_INITIAL:
-               if (currentMode==autoMode.MODE_COLOR_TEST)
-                    newState(STATE_DETECT_COLOR);
-               else if (currentMode == autoMode.MODE_WHITE_LINE_TEST)
-                    newState(STATE_FIND_WHITE_LINE1_FRONT);
-               else newState(STATE_FIRST_SHOT);
+                newState(STATE_FIRST_SHOT);
                 break;
 
             case STATE_MOVE_FROM_WALL:
@@ -183,40 +173,17 @@ public class AutoStates extends BaseOp {
                 if (particlesShot == 1) {
                     chrisAutoShoot();
                     particlesShot++;
-                } else if (currentMode== autoMode.MODE_DRIVE_BEACONS){
+                } else if (currentMode == autoMode.MODE_DRIVE_BEACONS) {
                     newState(STATE_DRIVE_BACKWARDS1);
-                }else if (currentMode==autoMode.MODE_PUSH_CAP_BALL) {
-                    newState(STATE_CAP_DRIVE1);
-                }else {
+                } else {
                     newState(STATE_STOP);
                 }
                 break;
 
-            case STATE_CAP_DRIVE1:
-                speed = .5;
-                if (MecanumDrive(speed, isRed?backwardMove(speed):forwardMove(speed), rotationComp(), 2000)) {
-                    newState(STATE_CAP_TURN1);
-                    MecanumDrive(0, 0, rotationComp(), 0);
-                }
-            break;
-
-            case STATE_CAP_TURN1:
-                targetHeading = isRed?45:315;
-                if (MecanumDrive(0, 0, rotationComp(), 0));{
-                    newState(STATE_CAP_DRIVE2);
-                }
-                break;
-
-            case STATE_CAP_DRIVE2:
-                speed = .5;
-                if (MecanumDrive(speed, isRed?forwardMove(speed):backwardMove(speed), rotationComp(), 4000)) {
-                    newState(STATE_CAP_TURN1);
-                    MecanumDrive(0, 0, rotationComp(), 0);
-                }
 
             case STATE_DRIVE_BACKWARDS1:
                 speed = 0.75;
-                if (MecanumDrive(speed, isRed?forwardMove(speed):backwardMove(speed), rotationComp(), isRed?-700:1000)) {
+                if (MecanumDrive(speed, isRed ? forwardMove(speed) : backwardMove(speed), rotationComp(), isRed ? -700 : 1100)) {
                     newState(STATE_TURN_45_1);
                     MecanumDrive(0, 0, rotationComp(), 0);
                 }
@@ -224,7 +191,7 @@ public class AutoStates extends BaseOp {
                 break;
 
             case STATE_TURN_45_1:
-                targetHeading = isRed?45:317;
+                targetHeading = isRed ? 45 : 313;
                 MecanumDrive(0, 0, rotationComp(), 0);
                 if (gyroCloseEnough(3)) {
                     newState(STATE_DRIVE_BACKWARDS2);
@@ -232,149 +199,66 @@ public class AutoStates extends BaseOp {
                 break;
 
             case STATE_DRIVE_BACKWARDS2:
-                speed= isRed?0.75:0.75;
-                if (MecanumDrive(speed, isRed?forwardMove(speed):backwardMove(speed), rotationComp(), isRed?-4800:4500)) {
+                speed = isRed ? 0.75 : 1;
+                if (MecanumDrive(speed, isRed ? forwardMove(speed) : backwardMove(speed), rotationComp(), isRed ? -4800 : 5000)) {
                     newState(STATE_TURN_45_2);
                     MecanumDrive(0, 0, rotationComp(), 0);
                 }
                 break;
 
             case STATE_TURN_45_2:
-                targetHeading = isRed?90:270;
+                targetHeading = isRed ? 90 : 270;
                 MecanumDrive(0, 0, rotationComp(), 0);
                 if (gyroCloseEnough(3)) {
-                    newState(STATE_FIND_WHITE_LINE1_FRONT);
+                    newState(STATE_MOVE_LEFT);
                 }
                 break;
 
-
-            case STATE_FIND_WHITE_LINE1_FRONT:
-                speed = .5;
-                MecanumDrive(speed,isRed?forwardMove(speed):backwardMove(speed),rotationComp(),0);
-                if (odSensor.getLightDetected() >= LIGHT_SENSOR_VAL) {
-
-                    MecanumDrive(0,0,rotationComp(),0);
-                    newState(STATE_GO_TO_BEACON1);
-                }
-
-                break;
-
-            case STATE_GO_TO_BEACON1:
-                speed = 0.5;
-                if (MecanumDrive(speed,leftMove(speed),rotationComp(),isRed?1250:1250)){
-                    MecanumDrive(0,0,0,0);
-                    newState(STATE_GIVE_ROOM_FOR_ERROR1);
-                }
-                break;
-
-            case STATE_GIVE_ROOM_FOR_ERROR1:
-                speed = .25;
-                if (MecanumDrive(speed,isRed?backwardMove(speed):forwardMove(speed),rotationComp(),isRed?1250:-100)) {
-                    MecanumDrive(0,0,0,0);
-                    newState(STATE_GO_TO_WHITE_LINE1);
-                }
-                break;
-
-            case STATE_GO_TO_WHITE_LINE1:
-                speed = .5;
-                MecanumDrive(speed,isRed?forwardMove(speed):backwardMove(speed),rotationComp(),0);
-                if (odSensor.getLightDetected() >= LIGHT_SENSOR_VAL) {
-                    MecanumDrive(0, 0, rotationComp(), 0);
-                    startTime = System.currentTimeMillis();
-                    newState(STATE_WAIT_FOR_WHITE_LINE1);
-                }
-                break;
-
-//            case STATE_FIND_WHITE_LINE1_BACK:
-//                if (odSensor.getLightDetected() < LIGHT_SENSOR_VAL) {
-//                    MecanumDrive(0, 0, rotationComp(), 0);
-//                    whiteLineBackEdge = leftFront.getCurrentPosition();
-//                    distanceWhiteLineCenter = (whiteLineBackEdge - whiteLineFirstEdge)/2;
-//                    newState(STATE_FIND_WHITE_LINE1_CENTER);
-//                }
-//                break;
-//
-//            case STATE_FIND_WHITE_LINE1_CENTER:
-//                if (MecanumDrive(.25,0,rotationComp(),distanceWhiteLineCenter)){
-//                    MecanumDrive(0,0,rotationComp(),0);
-//                    if (currentMode == autoMode.MODE_WHITE_LINE_TEST)
-//                        newState(STATE_STOP);
-//                    else newState(STATE_DETECT_COLOR);
-//                }
-//                break;
-            case STATE_WAIT_FOR_WHITE_LINE1:
-                if (System.currentTimeMillis( )> startTime + 500)
-                    newState(STATE_DETECT_COLOR);
-            break;
-
-            case STATE_DETECT_COLOR:
-                telemetry.addData("4","STATE_DETECT_COLOR Reached");
-                if (redBlueSensor.blue() > redBlueSensor.red() + 50) {
-                    beaconPress.setPosition(servoExtend);
-                    telemetry.addData("3","I See Blue");
-                    newState(STATE_PRESSING_BEACON1);
-                }
-                else if (redBlueSensor.red() > redBlueSensor.blue() + 50){
-                    beaconPress.setPosition(servoExtend);
-                    telemetry.addData("3","I See Red");
-                    newState(STATE_PRESSING_BEACON1);
-                }
-                else if (currentMode == autoMode.MODE_COLOR_TEST)
-                        newState(STATE_DETECT_COLOR);
-
-                else newState(STATE_DETECT_COLOR);
-                    startTime = System.currentTimeMillis();
-                break;
-
-            case STATE_PRESSING_BEACON1:
-                if (System.currentTimeMillis() > startTime + 1000)
-                newState(STATE_DRIVE_FROM_LINE1);
-                break;
-
-            case STATE_DRIVE_FROM_LINE1:
-                speed = .5;
-                if(MecanumDrive(speed,isRed?forwardMove(speed):backwardMove(speed),rotationComp(),isRed?-2000:500)) {
+            case STATE_MOVE_LEFT:
+                speed = .7;
+                if (MecanumDrive(speed, isRed ? rightMove(speed) : leftMove(speed), rotationComp(), isRed ? -500 : 1000)) {
                     MecanumDrive(0, 0, 0, 0);
-                    newState(STATE_FIND_WHITE_LINE2_FRONT);
+                    newState(STATE_DRIVE_FOR_BEACON1);
                 }
                 break;
 
-            case STATE_FIND_WHITE_LINE2_FRONT:
-                beaconPress.setPosition(servoIn);
-                MecanumDrive(.5,backwardMove(.5),rotationComp(),0);
-                if (odSensor.getLightDetected() >= LIGHT_SENSOR_VAL) {
-                    startTime = System.currentTimeMillis();
-                    MecanumDrive(0,0,rotationComp(),0);
-                    newState(STATE_WAIT_FOR_WHITE_LINE2);
+            case STATE_DRIVE_FOR_BEACON1:
+                speed = .3;
+                if (MecanumDrive(speed, isRed ? forwardMove(speed) : backwardMove(speed), rotationComp(), 1500)) {
+                    newState(STATE_DRIVE_IN_BETWEEN_BEACONS);
                 }
-
-                break;
-//
-//            case STATE_FIND_WHITE_LINE2_BACK:
-//                newState(STATE_GO_TO_BEACON2);
-//                break;
-
-            case STATE_WAIT_FOR_WHITE_LINE2:
-                if (System.currentTimeMillis() > startTime + 500)
-                    newState(STATE_DETECT_COLOR_2);
                 break;
 
-            case STATE_DETECT_COLOR_2:
-                if (redBlueSensor.blue() > redBlueSensor.red() + 50) {
-                    beaconPress.setPosition(servoExtend);
-                    telemetry.addData("3","I See Blue");
+            case STATE_DRIVE_IN_BETWEEN_BEACONS:
+                speed = 1;
+                if (MecanumDrive(speed, isRed ? forwardMove(speed) : backwardMove(speed), rotationComp(), 2750)) {
+                    newState(STATE_DRIVE_FOR_BEACON2);
+                }
+                break;
+
+            case STATE_DRIVE_FOR_BEACON2:
+                speed = .3;
+                if (MecanumDrive(speed, isRed ? forwardMove(speed) : backwardMove(speed), rotationComp(), 1750)) {
+                    newState(STATE_CAP_TURN1);
+                }
+                break;
+
+            case STATE_CAP_TURN1:
+                targetHeading = isRed ? 45 : 320;
+                MecanumDrive(0, 0, rotationComp(), 0);
+                newState(STATE_CAP_DRIVE1);
+                break;
+
+            case STATE_CAP_DRIVE1:
+                speed = 1;
+                if (MecanumDrive(speed, isRed ? backwardMove(speed) : forwardMove(speed), rotationComp(), isRed ? 7500 : -7500)) {
+                    MecanumDrive(0, 0, rotationComp(), 0);
                     newState(STATE_STOP);
                 }
-                else if (redBlueSensor.red() > redBlueSensor.blue() + 50){
-                    beaconPress.setPosition(servoExtend);
-                    telemetry.addData("3","I See Red");
-                    newState(STATE_STOP);
-                }
-                newState(STATE_DETECT_COLOR_2);
                 break;
 
             case STATE_STOP:
-                MecanumDrive(0,0,0,0);
+                MecanumDrive(0, 0, 0, 0);
                 break;
         }
 
@@ -396,7 +280,7 @@ public class AutoStates extends BaseOp {
         shooterTargetPosition -= 3360;
         shooter.setTargetPosition(shooterTargetPosition);
 
-         while (shooter.isBusy());
+        while (shooter.isBusy()) ;
     }
 
     public void chrisAutoLoad() { // make sure servo is initialized to .15
