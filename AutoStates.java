@@ -120,10 +120,10 @@ public class AutoStates extends BaseOp {
         boolean extendBeaconPress = (isRed && redBlueSensor.blue() + colorSensorMargin < redBlueSensor.red() ||
                 (!isRed && redBlueSensor.blue() > redBlueSensor.red() + colorSensorMargin));
         if (extendBeaconPress) {
-            beaconPress.setPosition(servoExtend);
+            beaconPress.setPosition(isRed? servoOpposite:servoExtend);
             bringBackInAt = System.currentTimeMillis() + retractDelay;
         } else if (bringBackInAt < System.currentTimeMillis()) {
-            beaconPress.setPosition(servoIn);
+            beaconPress.setPosition(isRed? servoOppositeIn : servoIn);
         }
         super.loop();
         // Telemetry block
@@ -210,7 +210,7 @@ public class AutoStates extends BaseOp {
                 targetHeading = isRed ? 90 : 270;
                 MecanumDrive(0, 0, rotationComp(), 0);
                 if (gyroCloseEnough(3)) {
-                    newState(STATE_DRIVE_FOR_BEACON1); // currently doesn't move left
+                    newState(STATE_DRIVE_FOR_BEACON1);
                 }
                 break;
 
@@ -251,7 +251,7 @@ public class AutoStates extends BaseOp {
 
             case STATE_CAP_DRIVE1:
                 speed = 1;
-                if (MecanumDrive(speed, isRed ? backwardMove(speed) : forwardMove(speed), rotationComp(), isRed ? 7500 : -7600)) {
+                if (MecanumDrive(speed, isRed ? backwardMove(speed) : forwardMove(speed), rotationComp(), isRed ? 7500 : -7700)) {
                     MecanumDrive(0, 0, rotationComp(), 0);
                     newState(STATE_STOP);
                 }
