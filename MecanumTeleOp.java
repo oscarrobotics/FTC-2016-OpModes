@@ -149,21 +149,21 @@ public class MecanumTeleOp extends BaseOp {
             }
         leftBumperPressed = gamepad2.left_bumper;
         if (gamepad2.x)
-            toggle = false;
+            toggleRedAndBlue = false;
         if (gamepad2.y)
-            toggle = true;
+            toggleRedAndBlue = true;
 
         cdi.setLED(1, seeingRed);
         cdi.setLED(0, seeingBlue);
 
-        boolean correctColor = (toggle && redBlueSensor.red() > redBlueSensor.blue() + colorSensorMargin) ||
-                (!toggle && redBlueSensor.blue() > redBlueSensor.red() + colorSensorMargin);
+        boolean correctColor = (toggleRedAndBlue && redBlueSensor.red() > redBlueSensor.blue() + colorSensorMargin) ||
+                (!toggleRedAndBlue && redBlueSensor.blue() > redBlueSensor.red() + colorSensorMargin);
         if (!toggleDebug) {
             if (correctColor) {
                 beaconPress.setPosition(servoExtend);
-                bringBackInAt = System.currentTimeMillis() + 1500;
+                bringBackInAt = System.currentTimeMillis() + retractDelay;
             } else {
-                if (bringBackInAt < System.currentTimeMillis() && !toggle) {
+                if (bringBackInAt < System.currentTimeMillis() && !toggleRedAndBlue) {
                     beaconPress.setPosition(servoIn);
                 }
             }

@@ -71,10 +71,11 @@ public class BaseOp extends OpMode {
     protected boolean isRed = false;
     public final double LIGHT_SENSOR_VAL = 0.1;
     public long bringBackInAt = 0;
-    public boolean toggle = false; // 0 for blue, 1 for red
+    public boolean toggleRedAndBlue = false; // 0 for blue, 1 for red
     public boolean toggleDebug = false; //toggles through the button presser states
     public boolean leftBumperPressed = false;
-
+    public static final int retractDelay = 400;
+    public boolean zeroWasAdjusted = false;
     // Mecanum variables
     double speed = 0;
     double direction = 0;
@@ -101,6 +102,7 @@ public class BaseOp extends OpMode {
     }
 
 
+
     public void init() { // runs when any OpMode is initalized, sets up everything needed to run robot
 
         // Controller/Module block
@@ -116,10 +118,13 @@ public class BaseOp extends OpMode {
 
         // Motor block
         shooter = hardwareMap.dcMotor.get("shooter"); // Shooter Motor
-        shooter.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         shooter.setDirection(DcMotor.Direction.FORWARD);
         shooter.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        shooterTargetPosition = 0;
+        shooter.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        shooter.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         shooter.setPower(1.0);
+        shooter.setTargetPosition(0);
 
         collector = hardwareMap.dcMotor.get("collector"); // Spinny Foam Thing Motor
         collector.setDirection(DcMotor.Direction.REVERSE);
@@ -179,24 +184,23 @@ public class BaseOp extends OpMode {
     @Override
     public void init_loop() { // runs after pressing INIT and loops until START pressed
         super.init_loop();
-
-        shooter.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-
         if (gamepad2.dpad_up) { // bring shooter up by 25 ticks
-            shooter.setTargetPosition(shooter.getCurrentPosition() + 25);
+            shooterTargetPosition = shooter.getCurrentPosition() + 25;
+            shooter.setTargetPosition(shooterTargetPosition);
         }
         if (gamepad2.dpad_down) { // bring shooter down by 25 ticks
-            shooter.setTargetPosition(shooter.getCurrentPosition() - 25);
+            shooterTargetPosition = shooter.getCurrentPosition() - 25;
+            shooter.setTargetPosition(shooterTargetPosition);
         }
-
-        if (gamepad2.start || gamepad1.start) {
+        if ((!gamepad2.dpad_down && !gamepad2.dpad_up) && zeroWasAdjusted) {
             shooterTargetPosition = 0;
-            shooter.setTargetPosition(0);
+            shooter.setTargetPosition(shooterTargetPosition);
             shooter.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
             shooter.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         }
+        zeroWasAdjusted = (gamepad2.dpad_down || gamepad2.dpad_up);
         telemetry.addData("Shooter Position", shooter.getCurrentPosition());
-        //telemetry.update();
+
     }
 
     public void setRunMode() { // sets things specific to autonomous
@@ -274,13 +278,13 @@ public class BaseOp extends OpMode {
         // DPad drive
         if (gamepad1.dpad_up || gamepad1.dpad_down || gamepad1.dpad_left || gamepad1.dpad_right) {
             if (gamepad1.dpad_up) { // forwards
-                speed = 0.3;
+                speed = gamepad1.right_bumper?1.0: 0.3;
                 direction = Math.atan2(-speed, 0) - Math.PI / 4;
             } else if (gamepad1.dpad_right) { // right
                 speed = 0.7;
                 direction = Math.atan2(0, -speed) - Math.PI / 4;
             } else if (gamepad1.dpad_down) { // backwards
-                speed = 0.3;
+                speed = gamepad1.right_bumper?1.0:.3;
                 direction = Math.atan2(speed, 0) - Math.PI / 4;
             } else { // left
                 speed = 0.7;

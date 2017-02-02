@@ -121,7 +121,7 @@ public class AutoStates extends BaseOp {
                 (!isRed && redBlueSensor.blue() > redBlueSensor.red() + colorSensorMargin));
         if (extendBeaconPress) {
             beaconPress.setPosition(servoExtend);
-            bringBackInAt = System.currentTimeMillis() + 1000;
+            bringBackInAt = System.currentTimeMillis() + retractDelay;
         } else if (bringBackInAt < System.currentTimeMillis()) {
             beaconPress.setPosition(servoIn);
         }
@@ -210,13 +210,13 @@ public class AutoStates extends BaseOp {
                 targetHeading = isRed ? 90 : 270;
                 MecanumDrive(0, 0, rotationComp(), 0);
                 if (gyroCloseEnough(3)) {
-                    newState(STATE_MOVE_LEFT);
+                    newState(STATE_DRIVE_FOR_BEACON1); // currently doesn't move left
                 }
                 break;
 
             case STATE_MOVE_LEFT:
                 speed = .7;
-                if (MecanumDrive(speed, isRed ? rightMove(speed) : leftMove(speed), rotationComp(), isRed ? -500 : 1000)) {
+                if (MecanumDrive(speed, isRed ? rightMove(speed) : leftMove(speed), rotationComp(), isRed ? -1000 : 1000)) {
                     MecanumDrive(0, 0, 0, 0);
                     newState(STATE_DRIVE_FOR_BEACON1);
                 }
@@ -224,7 +224,7 @@ public class AutoStates extends BaseOp {
 
             case STATE_DRIVE_FOR_BEACON1:
                 speed = .3;
-                if (MecanumDrive(speed, isRed ? forwardMove(speed) : backwardMove(speed), rotationComp(), 1500)) {
+                if (MecanumDrive(speed, isRed ? forwardMove(speed) : backwardMove(speed), rotationComp(), 2000)) {
                     newState(STATE_DRIVE_IN_BETWEEN_BEACONS);
                 }
                 break;
@@ -238,20 +238,20 @@ public class AutoStates extends BaseOp {
 
             case STATE_DRIVE_FOR_BEACON2:
                 speed = .3;
-                if (MecanumDrive(speed, isRed ? forwardMove(speed) : backwardMove(speed), rotationComp(), 1750)) {
+                if (MecanumDrive(speed, isRed ? forwardMove(speed) : backwardMove(speed), rotationComp(), 2200)) {
                     newState(STATE_CAP_TURN1);
                 }
                 break;
 
             case STATE_CAP_TURN1:
-                targetHeading = isRed ? 45 : 320;
+                targetHeading = isRed ? 45 : 310;
                 MecanumDrive(0, 0, rotationComp(), 0);
                 newState(STATE_CAP_DRIVE1);
                 break;
 
             case STATE_CAP_DRIVE1:
                 speed = 1;
-                if (MecanumDrive(speed, isRed ? backwardMove(speed) : forwardMove(speed), rotationComp(), isRed ? 7500 : -7500)) {
+                if (MecanumDrive(speed, isRed ? backwardMove(speed) : forwardMove(speed), rotationComp(), isRed ? 7500 : -7600)) {
                     MecanumDrive(0, 0, rotationComp(), 0);
                     newState(STATE_STOP);
                 }
