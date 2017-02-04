@@ -64,7 +64,7 @@ public class BaseOp extends OpMode {
     double rotStickX = 0;
     double driveStickY = 0;
     double driveStickX = 0;
-    public final double servoIn = .59;
+    public final double servoIn = .65;
     public final double servoExtend = .4;
     public final double servoOpposite = .2;
     public final double servoOppositeIn = .1;
@@ -75,8 +75,9 @@ public class BaseOp extends OpMode {
     public boolean toggleRedAndBlue = false; // 0 for blue, 1 for red
     public boolean toggleDebug = false; //toggles through the button presser states
     public boolean leftBumperPressed = false;
-    public static final int retractDelay = 400;
+    public static final int retractDelay = 200;
     public boolean zeroWasAdjusted = false;
+    public boolean beaaconEnabled = false;
     // Mecanum variables
     double speed = 0;
     double direction = 0;
@@ -346,7 +347,7 @@ public class BaseOp extends OpMode {
         double gyro = currentGyroHeading;
         double target = targetHeading;
         double posError = gyro - target;
-        double epsilon = 4;
+        double epsilon = 2; // was 4
         double minSpeed = 0.12;
         double maxSpeed = 1;
 

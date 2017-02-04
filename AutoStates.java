@@ -117,12 +117,16 @@ public class AutoStates extends BaseOp {
 
     public void loop() {
         loopCounter++;
-        boolean extendBeaconPress = (isRed && redBlueSensor.blue() + colorSensorMargin < redBlueSensor.red() ||
-                (!isRed && redBlueSensor.blue() > redBlueSensor.red() + colorSensorMargin));
-        if (extendBeaconPress) {
-            beaconPress.setPosition(isRed? servoOpposite:servoExtend);
-            bringBackInAt = System.currentTimeMillis() + retractDelay;
-        } else if (bringBackInAt < System.currentTimeMillis()) {
+        if (beaaconEnabled) {
+            boolean extendBeaconPress = (isRed && redBlueSensor.blue() + colorSensorMargin < redBlueSensor.red() ||
+                    (!isRed && redBlueSensor.blue() > redBlueSensor.red() + colorSensorMargin));
+            if (extendBeaconPress) {
+                beaconPress.setPosition(isRed ? servoOpposite : servoExtend);
+                bringBackInAt = System.currentTimeMillis() + retractDelay;
+            } else if (bringBackInAt < System.currentTimeMillis()) {
+                beaconPress.setPosition(isRed ? servoOppositeIn : servoIn);
+            }
+        }else {
             beaconPress.setPosition(isRed? servoOppositeIn : servoIn);
         }
         super.loop();
@@ -200,7 +204,7 @@ public class AutoStates extends BaseOp {
 
             case STATE_DRIVE_BACKWARDS2:
                 speed = isRed ? 0.75 : 1;
-                if (MecanumDrive(speed, isRed ? forwardMove(speed) : backwardMove(speed), rotationComp(), isRed ? -4800 : 5000)) {
+                if (MecanumDrive(speed, isRed ? forwardMove(speed) : backwardMove(speed), rotationComp(), isRed ? -4900 : 5000)) {
                     newState(STATE_TURN_45_2);
                     MecanumDrive(0, 0, rotationComp(), 0);
                 }
@@ -210,40 +214,44 @@ public class AutoStates extends BaseOp {
                 targetHeading = isRed ? 90 : 270;
                 MecanumDrive(0, 0, rotationComp(), 0);
                 if (gyroCloseEnough(3)) {
-                    newState(STATE_DRIVE_FOR_BEACON1);
+                    newState(isRed? STATE_MOVE_LEFT :STATE_DRIVE_FOR_BEACON1);
                 }
                 break;
 
             case STATE_MOVE_LEFT:
                 speed = .7;
-                if (MecanumDrive(speed, isRed ? rightMove(speed) : leftMove(speed), rotationComp(), isRed ? -1000 : 1000)) {
+                if (MecanumDrive(speed,leftMove(speed), rotationComp(),500)) {
                     MecanumDrive(0, 0, 0, 0);
                     newState(STATE_DRIVE_FOR_BEACON1);
                 }
                 break;
 
             case STATE_DRIVE_FOR_BEACON1:
+                beaaconEnabled = true;
                 speed = .3;
-                if (MecanumDrive(speed, isRed ? forwardMove(speed) : backwardMove(speed), rotationComp(), 2000)) {
+                if (MecanumDrive(speed, isRed ? forwardMove(speed) : backwardMove(speed), rotationComp(), isRed? -2000 : 2000)) {
                     newState(STATE_DRIVE_IN_BETWEEN_BEACONS);
                 }
                 break;
 
             case STATE_DRIVE_IN_BETWEEN_BEACONS:
+                beaaconEnabled = false;
                 speed = 1;
-                if (MecanumDrive(speed, isRed ? forwardMove(speed) : backwardMove(speed), rotationComp(), 2750)) {
+                if (MecanumDrive(speed, isRed ? forwardMove(speed) : backwardMove(speed), rotationComp(),isRed? -2500 : 2750)) {
                     newState(STATE_DRIVE_FOR_BEACON2);
                 }
                 break;
 
             case STATE_DRIVE_FOR_BEACON2:
+                beaaconEnabled = true;
                 speed = .3;
-                if (MecanumDrive(speed, isRed ? forwardMove(speed) : backwardMove(speed), rotationComp(), 2200)) {
+                if (MecanumDrive(speed, isRed ? forwardMove(speed) : backwardMove(speed), rotationComp(),isRed? -2200 : 2200)) {
                     newState(STATE_CAP_TURN1);
                 }
                 break;
 
             case STATE_CAP_TURN1:
+                beaaconEnabled = false;
                 targetHeading = isRed ? 45 : 310;
                 MecanumDrive(0, 0, rotationComp(), 0);
                 newState(STATE_CAP_DRIVE1);

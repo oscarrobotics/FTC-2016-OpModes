@@ -144,9 +144,12 @@ public class MecanumTeleOp extends BaseOp {
             } else if (beaconPress.getPosition() == servoExtend) {
                 beaconPress.setPosition(servoOpposite);
             } else if (beaconPress.getPosition() == servoOpposite) {
+                beaconPress.setPosition(servoOppositeIn);
+            } else if (beaconPress.getPosition() == servoOppositeIn){
                 beaconPress.setPosition(servoIn);
                 toggleDebug = false;
             }
+
         leftBumperPressed = gamepad2.left_bumper;
         if (gamepad2.x)
             toggleRedAndBlue = false;
