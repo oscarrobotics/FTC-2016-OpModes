@@ -1,7 +1,6 @@
 package org.firstinspires.ftc.teamcode;
 
 
-import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 /**
@@ -81,7 +80,7 @@ public class MecanumTeleOp extends BaseOp {
 
 
     public void fullAutoFire() {
-        shooter.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        //shooter.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         switch (mCurrentState) {
             case STATE_IDLE:
                 if (gamepad2.left_trigger > 0.5)
@@ -137,38 +136,37 @@ public class MecanumTeleOp extends BaseOp {
     private void extendBeaconPress() {
         boolean seeingRed = redBlueSensor.red() > redBlueSensor.blue() + colorSensorMargin;
         boolean seeingBlue = redBlueSensor.blue() > redBlueSensor.red() + colorSensorMargin;
-        if (gamepad2.left_bumper && !leftBumperPressed)
-            if (beaconPress.getPosition() == servoIn) {
-                beaconPress.setPosition(servoExtend);
-                toggleDebug = true;
-            } else if (beaconPress.getPosition() == servoExtend) {
-                beaconPress.setPosition(servoOpposite);
-            } else if (beaconPress.getPosition() == servoOpposite) {
-                beaconPress.setPosition(servoOppositeIn);
-            } else if (beaconPress.getPosition() == servoOppositeIn){
-                beaconPress.setPosition(servoIn);
-                toggleDebug = false;
-            }
+//        if (gamepad2.left_bumper && !leftBumperPressed)
+//            if (beaconPress.getPosition() == servoIn) {
+//                beaconPress.setPosition(servoExtend);
+//                toggleDebug = true;
+//            } else if (beaconPress.getPosition() == servoExtend) {
+//                beaconPress.setPosition(servoOpposite);
+//            } else if (beaconPress.getPosition() == servoOpposite) {
+//                beaconPress.setPosition(servoOppositeIn);
+//            } else if (beaconPress.getPosition() == servoOppositeIn){
+//                beaconPress.setPosition(servoIn);
+//                toggleDebug = false;
+//            }
 
-        leftBumperPressed = gamepad2.left_bumper;
+        //leftBumperPressed = gamepad2.left_bumper;
         if (gamepad2.x)
-            toggleRedAndBlue = false;
+            lookingForRed = false;
         if (gamepad2.y)
-            toggleRedAndBlue = true;
+            lookingForRed = true;
 
         cdi.setLED(1, seeingRed);
         cdi.setLED(0, seeingBlue);
 
-        boolean correctColor = (toggleRedAndBlue && redBlueSensor.red() > redBlueSensor.blue() + colorSensorMargin) ||
-                (!toggleRedAndBlue && redBlueSensor.blue() > redBlueSensor.red() + colorSensorMargin);
-        if (!toggleDebug) {
-            if (correctColor) {
-                beaconPress.setPosition(servoExtend);
-                bringBackInAt = System.currentTimeMillis() + retractDelay;
-            } else {
-                if (bringBackInAt < System.currentTimeMillis() && !toggleRedAndBlue) {
-                    beaconPress.setPosition(servoIn);
-                }
+        boolean correctColor = (lookingForRed && redBlueSensor.red() > redBlueSensor.blue() + colorSensorMargin) ||
+                (!lookingForRed && redBlueSensor.blue() > redBlueSensor.red() + colorSensorMargin);
+
+        if (correctColor) {
+            beaconPress.setPosition(extendServoPos);
+            bringBackInAt = System.currentTimeMillis() + retractDelay;
+        } else {
+            if (bringBackInAt < System.currentTimeMillis()) {
+                beaconPress.setPosition(safeServoPos);
             }
         }
     }

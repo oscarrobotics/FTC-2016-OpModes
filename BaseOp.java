@@ -64,20 +64,23 @@ public class BaseOp extends OpMode {
     double rotStickX = 0;
     double driveStickY = 0;
     double driveStickX = 0;
-    public final double servoIn = .65;
-    public final double servoExtend = .4;
-    public final double servoOpposite = .2;
-    public final double servoOppositeIn = .1;
+    public final double servoIn = .74;
+    public final double servoExtend = .56;
+    public final double servoOpposite = .22;
+    public final double servoOppositeIn = .01;
     public final double colorSensorMargin = 100;
     protected boolean isRed = false;
+    protected boolean nearBeacon = false;
     public final double LIGHT_SENSOR_VAL = 0.1;
     public long bringBackInAt = 0;
-    public boolean toggleRedAndBlue = false; // 0 for blue, 1 for red
+    public boolean lookingForRed = false; // 0 for blue, 1 for red
     public boolean toggleDebug = false; //toggles through the button presser states
     public boolean leftBumperPressed = false;
     public static final int retractDelay = 200;
     public boolean zeroWasAdjusted = false;
     public boolean beaaconEnabled = false;
+    public double safeServoPos = servoIn;
+    public double extendServoPos = servoExtend;
     // Mecanum variables
     double speed = 0;
     double direction = 0;
@@ -157,7 +160,7 @@ public class BaseOp extends OpMode {
         loader.setPosition(0.0); // TODO: Find right value for this
 
         beaconPress = hardwareMap.servo.get("beaconPress"); // beacon presser servo
-        beaconPress.setPosition(servoIn); // TODO: Find right value for this
+        beaconPress.setPosition(servoIn);
 
         // Sensor block
 
@@ -196,13 +199,14 @@ public class BaseOp extends OpMode {
         }
         if ((!gamepad2.dpad_down && !gamepad2.dpad_up) && zeroWasAdjusted) {
             shooterTargetPosition = 0;
-            shooter.setTargetPosition(shooterTargetPosition);
             shooter.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
             shooter.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            shooter.setTargetPosition(shooterTargetPosition);
         }
         zeroWasAdjusted = (gamepad2.dpad_down || gamepad2.dpad_up);
         telemetry.addData("Shooter Position", shooter.getCurrentPosition());
 
+        nearBeacon = false;
     }
 
     public void setRunMode() { // sets things specific to autonomous
@@ -227,7 +231,7 @@ public class BaseOp extends OpMode {
 
     public void manualFire() { // Teleop particle shooting
         shooter.setPower(1.0);
-        shooter.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+       // shooter.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         if (!shooting && shooterReady()) { // if NOT SHOOTING but READY TO SHOOT
             shooterTargetPosition -= 3360; // make our target to 1 full rotation
             shooter.setTargetPosition(shooterTargetPosition); // set that target as above
@@ -280,12 +284,16 @@ public class BaseOp extends OpMode {
         // DPad drive
         if (gamepad1.dpad_up || gamepad1.dpad_down || gamepad1.dpad_left || gamepad1.dpad_right) {
             if (gamepad1.dpad_up) { // forwards
+                safeServoPos = servoOppositeIn;
+                extendServoPos = servoOpposite;
                 speed = gamepad1.right_bumper?1.0: 0.3;
                 direction = Math.atan2(-speed, 0) - Math.PI / 4;
             } else if (gamepad1.dpad_right) { // right
                 speed = 0.7;
                 direction = Math.atan2(0, -speed) - Math.PI / 4;
             } else if (gamepad1.dpad_down) { // backwards
+                 safeServoPos = servoIn;
+                extendServoPos = servoExtend;
                 speed = gamepad1.right_bumper?1.0:.3;
                 direction = Math.atan2(speed, 0) - Math.PI / 4;
             } else { // left

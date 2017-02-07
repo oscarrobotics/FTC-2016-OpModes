@@ -1,23 +1,15 @@
 package org.firstinspires.ftc.teamcode;
 
-import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import static org.firstinspires.ftc.teamcode.AutoStates.State.*;
 
 @com.qualcomm.robotcore.eventloop.opmode.Autonomous(name = "Oscar: AutoStates", group = "Oscar")
 public class AutoStates extends BaseOp {
-    public int position, encoderTarget, particlesShot, particlesLoaded, loopCounter, timesMoved;
+    public int position, encoderTarget, loopCounter;
     public double drivePower;
-    public boolean doneShooting;
-    public double startTime;
-    public double target1;
     public double speed;
     public double direction;
-    public int whiteLineFirstEdge;
-    public int whiteLineBackEdge;
-    public int distanceWhiteLineCenter;
-
 
     public enum State { // Ideally, these stay in order of how we use them
         STATE_INITIAL,
@@ -37,7 +29,10 @@ public class AutoStates extends BaseOp {
         STATE_DRIVE_FOR_BEACON2,
         STATE_CAP_DRIVE1,
         STATE_CAP_TURN1,
-        STATE_CAP_DRIVE2,
+        STATE_TURN_FOR_PARK,
+        STATE_DRIVE_FOR_PARK,
+        STATE_TURN_FOR_PARK2,
+        STATE_DRIVE_FOR_PARK_RED,
         STATE_STOP
     }
 
@@ -105,11 +100,8 @@ public class AutoStates extends BaseOp {
         encoderTarget = 4950; // encoder target in native Ticks
         drivePower = 1.0;
         loader.setPosition(.15); // added to resolve loader servo not initialized properly - george
-        particlesShot = 0;
-        doneShooting = false;
         loopCounter = 0;
         beaconPress.setPosition(servoIn);
-        timesMoved = 0;
 
         // Init commands TODO: what am i?
         // init_loop();
@@ -127,7 +119,11 @@ public class AutoStates extends BaseOp {
                 beaconPress.setPosition(isRed ? servoOppositeIn : servoIn);
             }
         }else {
-            beaconPress.setPosition(isRed? servoOppositeIn : servoIn);
+            if (nearBeacon) {
+                beaconPress.setPosition(isRed ? servoOppositeIn : servoIn);
+            }else {
+                beaconPress.setPosition(servoIn);
+            }
         }
         super.loop();
         // Telemetry block
@@ -138,6 +134,8 @@ public class AutoStates extends BaseOp {
         switch (mCurrentState) {
             case STATE_INITIAL:
                 newState(STATE_FIRST_SHOT);
+                shooterTargetPosition -= 3360;
+                shooter.setTargetPosition(shooterTargetPosition);
                 break;
 
             case STATE_MOVE_FROM_WALL:
@@ -149,38 +147,34 @@ public class AutoStates extends BaseOp {
                 break;
 
             case STATE_FIRST_SHOT:
-                if (particlesShot == 0) {
-                    chrisAutoShoot();
-                    particlesShot++;
-                } else {
+                if (!shooter.isBusy()) {
+                    loader.setPosition(.5);
                     newState(STATE_FIRST_LOAD);
                 }
                 break;
 
             case STATE_FIRST_LOAD:
-                if (particlesLoaded == 0) {
-                    chrisAutoLoad();
-                    particlesLoaded++;
-                } else {
-                    startTime = System.currentTimeMillis();
+                if (loader.getPosition() == .5) {
                     newState(STATE_WAIT_FOR_LOAD);
                 }
                 break;
 
             case STATE_WAIT_FOR_LOAD:
-                if (System.currentTimeMillis() > startTime + 1250)
+                if (mStateTime.milliseconds() > 1250){
+                    loader.setPosition(.15);
+                    shooterTargetPosition -= 3360;
+                    shooter.setTargetPosition(shooterTargetPosition);
                     newState(STATE_SECOND_SHOT);
+                }
                 break;
 
             case STATE_SECOND_SHOT:
-                loader.setPosition(.15);
-                if (particlesShot == 1) {
-                    chrisAutoShoot();
-                    particlesShot++;
-                } else if (currentMode == autoMode.MODE_DRIVE_BEACONS) {
-                    newState(STATE_DRIVE_BACKWARDS1);
-                } else {
-                    newState(STATE_STOP);
+                if (!shooter.isBusy()){
+                    if (currentMode == autoMode.MODE_DRIVE_BEACONS) {
+                        newState(STATE_DRIVE_BACKWARDS1);
+                    }else {
+                        newState(STATE_STOP);
+                    }
                 }
                 break;
 
@@ -203,18 +197,19 @@ public class AutoStates extends BaseOp {
                 break;
 
             case STATE_DRIVE_BACKWARDS2:
-                speed = isRed ? 0.75 : 1;
+                speed = 1;
                 if (MecanumDrive(speed, isRed ? forwardMove(speed) : backwardMove(speed), rotationComp(), isRed ? -4900 : 5000)) {
+                    nearBeacon = true;
                     newState(STATE_TURN_45_2);
                     MecanumDrive(0, 0, rotationComp(), 0);
                 }
                 break;
 
             case STATE_TURN_45_2:
-                targetHeading = isRed ? 90 : 270;
+                targetHeading = isRed ? 88 : 270;
                 MecanumDrive(0, 0, rotationComp(), 0);
                 if (gyroCloseEnough(3)) {
-                    newState(isRed? STATE_MOVE_LEFT :STATE_DRIVE_FOR_BEACON1);
+                    newState(STATE_MOVE_LEFT);
                 }
                 break;
 
@@ -259,7 +254,30 @@ public class AutoStates extends BaseOp {
 
             case STATE_CAP_DRIVE1:
                 speed = 1;
-                if (MecanumDrive(speed, isRed ? backwardMove(speed) : forwardMove(speed), rotationComp(), isRed ? 7500 : -7700)) {
+                if (MecanumDrive(speed, isRed ? backwardMove(speed) : forwardMove(speed), rotationComp(), isRed ? 8000 : -10000)) {
+                    MecanumDrive(0, 0, rotationComp(), 0);
+                    newState(isRed? STATE_DRIVE_FOR_PARK_RED : STATE_TURN_FOR_PARK);
+                }
+                break;
+
+            case STATE_DRIVE_FOR_PARK_RED:
+                if (MecanumDrive(speed, forwardMove(speed), rotationComp(), -4000)) {
+                    MecanumDrive(0, 0, rotationComp(), 0);
+                    newState(STATE_TURN_FOR_PARK);
+                }
+                break;
+
+            case STATE_TURN_FOR_PARK:
+                speed = 1;
+                targetHeading = isRed? 0 : 270;
+                MecanumDrive(0, 0, rotationComp(), 0);
+                if (gyroCloseEnough(3))
+                    newState(STATE_DRIVE_FOR_PARK);
+                break;
+
+            case STATE_DRIVE_FOR_PARK:
+                speed = 1;
+                if (MecanumDrive(speed, backwardMove(speed), rotationComp(), 1800)) {
                     MecanumDrive(0, 0, rotationComp(), 0);
                     newState(STATE_STOP);
                 }
@@ -273,30 +291,22 @@ public class AutoStates extends BaseOp {
 
     }
 
-    public void chrisAutoShootOld() {
-        shooter.setPower(1.0);
-        shooter.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        shooterTargetPosition -= 3360;
-        do {
-            shooter.setTargetPosition(shooterTargetPosition);
-        } while (shooter.getCurrentPosition() >= shooterTargetPosition + 10);
-    }
 
-    public void chrisAutoShoot() {
-        shooter.setPower(1.0);
-        shooter.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        shooterTargetPosition -= 3360;
-        shooter.setTargetPosition(shooterTargetPosition);
-
-        while (shooter.isBusy()) ;
-    }
-
-    public void chrisAutoLoad() { // make sure servo is initialized to .15
-        do {
-            loader.setPosition(.5);
-        }
-        while (loader.getPosition() != .5);
-    }
+//    public void chrisAutoShoot() {
+//        shooter.setPower(1.0);
+//        //shooter.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+//        shooterTargetPosition -= 3360;
+//        shooter.setTargetPosition(shooterTargetPosition);
+//
+//        while (shooter.isBusy()) ;
+//    }
+//
+//    public void chrisAutoLoad() { // make sure servo is initialized to .15
+//        do {
+//            loader.setPosition(.5);
+//        }
+//        while (loader.getPosition() != .5);
+//    }
 
     private void newState(State newState) {
         // Reset the state time, and then change to next state.
