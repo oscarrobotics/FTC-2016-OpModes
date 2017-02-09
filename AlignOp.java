@@ -19,7 +19,7 @@ public class AlignOp extends BaseOp {
     public void loop() {
         MecanumGamepadDrive();
         encoderTelemetry();
-        whiteLineSensor();
+        //whiteLineSensor();
         addTelemetry();
 
         if (gamepad1.start || gamepad2.start) { // zero encoder when 1 or 2 presses Start
@@ -47,11 +47,11 @@ public class AlignOp extends BaseOp {
         rightValues = "FrontR: " + v2 + " BackR: " + v4;
     }
 
-    public void whiteLineSensor() {
-        odSensor.enableLed(true);
-        odValue = odSensor.getRawLightDetected();
-        sensorValues1 = "odSensor: " + odValue;
-    }
+//    public void whiteLineSensor() {
+//        //odSensor.enableLed(true);
+//        odValue = odSensor.getRawLightDetected();
+//        sensorValues1 = "odSensor: " + odValue;
+//    }
 
     public void addTelemetry() {
         telemetry.addData("1", leftValues);

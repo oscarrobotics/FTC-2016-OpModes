@@ -130,7 +130,7 @@ public class AutoStates extends BaseOp {
         telemetry.addLine()
                 .addData("Loop count", loopCounter)
                 .addData("State", mCurrentState);
-        telemetry.addData("3", "Light detected: " + odSensor.getLightDetected());
+       // telemetry.addData("3", "Light detected: " + odSensor.getLightDetected());
         switch (mCurrentState) {
             case STATE_INITIAL:
                 newState(STATE_FIRST_SHOT);
@@ -172,7 +172,7 @@ public class AutoStates extends BaseOp {
                 if (!shooter.isBusy()){
                     if (currentMode == autoMode.MODE_DRIVE_BEACONS) {
                         newState(STATE_DRIVE_BACKWARDS1);
-                    }else {
+                    }else if(currentMode==autoMode.MODE_SHOOT_ONLY){
                         newState(STATE_STOP);
                     }
                 }

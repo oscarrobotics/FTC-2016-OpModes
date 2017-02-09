@@ -49,7 +49,7 @@ public class BaseOp extends OpMode {
 
     // Sensors
     ColorSensor redBlueSensor; // Adafruit RGBW sensor
-    OpticalDistanceSensor odSensor; // Modern Robotics RGBW sensor
+    //OpticalDistanceSensor odSensor; // Modern Robotics RGBW sensor
     BNO055IMU imu; // Gyro
     Orientation angles; // Gyro angles
 
@@ -64,11 +64,12 @@ public class BaseOp extends OpMode {
     double rotStickX = 0;
     double driveStickY = 0;
     double driveStickX = 0;
-    public final double servoIn = .74;
+    public final double servoIn = .85;
     public final double servoExtend = .56;
-    public final double servoOpposite = .22;
-    public final double servoOppositeIn = .01;
+    public final double servoOpposite = .28;
+    public final double servoOppositeIn = .08;
     public final double colorSensorMargin = 100;
+    public  boolean beaconEnabled = false;
     protected boolean isRed = false;
     protected boolean nearBeacon = false;
     public final double LIGHT_SENSOR_VAL = 0.1;
@@ -168,7 +169,7 @@ public class BaseOp extends OpMode {
         AMSColorSensor.Parameters params = redBlueSensor.getParameters();
         redBlueSensor.initialize(params);
 */
-        odSensor = hardwareMap.opticalDistanceSensor.get("odSensor");
+        //odSensor = hardwareMap.opticalDistanceSensor.get("odSensor");
         redBlueSensor = hardwareMap.colorSensor.get("redBlueSensor");
 
         // Gyro block
@@ -283,6 +284,7 @@ public class BaseOp extends OpMode {
 
         // DPad drive
         if (gamepad1.dpad_up || gamepad1.dpad_down || gamepad1.dpad_left || gamepad1.dpad_right) {
+            beaconEnabled = true;
             if (gamepad1.dpad_up) { // forwards
                 safeServoPos = servoOppositeIn;
                 extendServoPos = servoOpposite;
@@ -301,8 +303,10 @@ public class BaseOp extends OpMode {
                 direction = Math.atan2(0, speed) - Math.PI / 4;
             }
         }
+
         // Joystick drive
         else {
+            beaaconEnabled = false;
             speed = Math.hypot(driveStickX, driveStickY);
             direction = Math.atan2(driveStickY, -driveStickX) - Math.PI / 4;
         }

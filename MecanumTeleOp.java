@@ -47,7 +47,6 @@ public class MecanumTeleOp extends BaseOp {
         Shoot();
         Collect();
         Load();
-        fullAutoFire();
         extendBeaconPress();
 
         telemetry.addData("1", beaconPress.getPosition());
@@ -77,55 +76,6 @@ public class MecanumTeleOp extends BaseOp {
             collector.setPower(0.0); // default to off
         }
     }
-
-
-    public void fullAutoFire() {
-        //shooter.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        switch (mCurrentState) {
-            case STATE_IDLE:
-                if (gamepad2.left_trigger > 0.5)
-                    newState(State.STATE_LOADING);
-                break;
-
-            case STATE_LOADING: // start loading
-                timeAtStart = System.currentTimeMillis();
-                loader.setPosition(0.5);
-                newState(State.STATE_WAIT_TO_SHOOT);
-                break;
-
-            case STATE_WAIT_TO_SHOOT: // loading is finished, move back servo for 100ms before firing
-                if (System.currentTimeMillis() >= timeAtStart + 500) {
-                    loader.setPosition(0.15);
-                    newState(State.STATE_INCREMENT_TARGET_POSITION);
-                }
-                break;
-
-//            case STATE_WAIT_TO_SHOOT:
-//                if(System.currentTimeMillis() >= timeAtStart + 1000) {
-//                    loader.setPosition(0.2);
-//                    shooterTargetPosition -= 3360;
-//                    shooter.setTargetPosition(shooterTargetPosition);
-//                    newState(State.STATE_INCREMENT_TARGET_POSITION);
-//                }
-//                break;
-
-            case STATE_INCREMENT_TARGET_POSITION: //
-                if (System.currentTimeMillis() >= timeAtStart + 600) {
-                    shooterTargetPosition -= 3360;
-                    newState(State.STATE_RETURN_TO_IDLE);
-                }
-                break;
-
-            case STATE_RETURN_TO_IDLE:
-                if (shooterReady()) {
-                    newState(State.STATE_IDLE);
-                }
-                break;
-
-
-        }
-    }
-
 
     private void newState(MecanumTeleOp.State newState) {
         // Reset the state time, and then change to next state.
@@ -161,7 +111,7 @@ public class MecanumTeleOp extends BaseOp {
         boolean correctColor = (lookingForRed && redBlueSensor.red() > redBlueSensor.blue() + colorSensorMargin) ||
                 (!lookingForRed && redBlueSensor.blue() > redBlueSensor.red() + colorSensorMargin);
 
-        if (correctColor) {
+        if (correctColor && beaaconEnabled) {
             beaconPress.setPosition(extendServoPos);
             bringBackInAt = System.currentTimeMillis() + retractDelay;
         } else {
