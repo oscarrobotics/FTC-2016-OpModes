@@ -27,6 +27,7 @@ public class AutoStates extends BaseOp {
         STATE_DRIVE_FOR_BEACON1,
         STATE_DRIVE_IN_BETWEEN_BEACONS,
         STATE_DRIVE_FOR_BEACON2,
+        STATE_DRIVE_AFTER_BEACONS,
         STATE_CAP_DRIVE1,
         STATE_CAP_TURN1,
         STATE_TURN_FOR_PARK,
@@ -180,7 +181,7 @@ public class AutoStates extends BaseOp {
 
 
             case STATE_DRIVE_BACKWARDS1:
-                speed = 0.75;
+                speed = isRed? 1 : .75;
                 if (MecanumDrive(speed, isRed ? forwardMove(speed) : backwardMove(speed), rotationComp(), isRed ? -700 : 1100)) {
                     newState(STATE_TURN_45_1);
                     MecanumDrive(0, 0, rotationComp(), 0);
@@ -223,24 +224,31 @@ public class AutoStates extends BaseOp {
 
             case STATE_DRIVE_FOR_BEACON1:
                 beaaconEnabled = true;
-                speed = .3;
-                if (MecanumDrive(speed, isRed ? forwardMove(speed) : backwardMove(speed), rotationComp(), isRed? -2000 : 2000)) {
+                speed = isRed? .25 : .3;
+                if (MecanumDrive(speed, isRed ? forwardMove(speed) : backwardMove(speed), rotationComp(), isRed? -1500 : 2000)) {
                     newState(STATE_DRIVE_IN_BETWEEN_BEACONS);
                 }
                 break;
 
             case STATE_DRIVE_IN_BETWEEN_BEACONS:
-                beaaconEnabled = false;
                 speed = 1;
-                if (MecanumDrive(speed, isRed ? forwardMove(speed) : backwardMove(speed), rotationComp(),isRed? -2500 : 2750)) {
+                if (MecanumDrive(speed, isRed ? forwardMove(speed) : backwardMove(speed), rotationComp(),isRed? -2700 : 2750)) {
                     newState(STATE_DRIVE_FOR_BEACON2);
                 }
                 break;
 
             case STATE_DRIVE_FOR_BEACON2:
                 beaaconEnabled = true;
-                speed = .3;
-                if (MecanumDrive(speed, isRed ? forwardMove(speed) : backwardMove(speed), rotationComp(),isRed? -2200 : 2200)) {
+                speed = isRed?.25 : .3;
+                if (MecanumDrive(speed, isRed ? forwardMove(speed) : backwardMove(speed), rotationComp(),isRed? -1600 : 2200)) {
+                    newState(isRed? STATE_DRIVE_AFTER_BEACONS : STATE_CAP_TURN1);
+                }
+                break;
+
+            case STATE_DRIVE_AFTER_BEACONS:
+                beaaconEnabled = false;
+                speed = 1;
+                if (MecanumDrive(speed, forwardMove(speed), rotationComp(),-800)) {
                     newState(STATE_CAP_TURN1);
                 }
                 break;
@@ -261,7 +269,7 @@ public class AutoStates extends BaseOp {
                 break;
 
             case STATE_DRIVE_FOR_PARK_RED:
-                if (MecanumDrive(speed, forwardMove(speed), rotationComp(), -4000)) {
+                if (MecanumDrive(speed, forwardMove(speed), rotationComp(), -1350)) {
                     MecanumDrive(0, 0, rotationComp(), 0);
                     newState(STATE_TURN_FOR_PARK);
                 }

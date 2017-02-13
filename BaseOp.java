@@ -67,7 +67,7 @@ public class BaseOp extends OpMode {
     public final double servoIn = .85;
     public final double servoExtend = .56;
     public final double servoOpposite = .28;
-    public final double servoOppositeIn = .08;
+    public final double servoOppositeIn = .09;
     public final double colorSensorMargin = 100;
     public  boolean beaconEnabled = false;
     protected boolean isRed = false;
