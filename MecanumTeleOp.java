@@ -111,7 +111,7 @@ public class MecanumTeleOp extends BaseOp {
         boolean correctColor = (lookingForRed && redBlueSensor.red() > redBlueSensor.blue() + colorSensorMargin) ||
                 (!lookingForRed && redBlueSensor.blue() > redBlueSensor.red() + colorSensorMargin);
 
-        if (correctColor && beaaconEnabled) {
+        if (correctColor) {
             beaconPress.setPosition(extendServoPos);
             bringBackInAt = System.currentTimeMillis() + retractDelay;
         } else {

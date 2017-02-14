@@ -13,8 +13,6 @@ public class AutoStates extends BaseOp {
 
     public enum State { // Ideally, these stay in order of how we use them
         STATE_INITIAL,
-        STATE_MOVE_FROM_WALL,
-        STATE_WAIT_FOR_FIRST_DRIVE,
         STATE_FIRST_SHOT,
         STATE_FIRST_LOAD,
         STATE_WAIT_FOR_LOAD,
@@ -32,7 +30,6 @@ public class AutoStates extends BaseOp {
         STATE_CAP_TURN1,
         STATE_TURN_FOR_PARK,
         STATE_DRIVE_FOR_PARK,
-        STATE_TURN_FOR_PARK2,
         STATE_DRIVE_FOR_PARK_RED,
         STATE_STOP
     }
@@ -43,10 +40,7 @@ public class AutoStates extends BaseOp {
 
     public enum autoMode {
         MODE_DRIVE_BEACONS,
-        MODE_PUSH_CAP_BALL,
-        MODE_SHOOT_ONLY,
-        MODE_COLOR_TEST,
-        MODE_WHITE_LINE_TEST
+        MODE_SHOOT_ONLY
     }
 
     public autoMode currentMode = autoMode.MODE_DRIVE_BEACONS;
@@ -58,18 +52,9 @@ public class AutoStates extends BaseOp {
         if (gamepad2.y && !yPressed) {
             switch (currentMode) {
                 case MODE_DRIVE_BEACONS:
-                    currentMode = autoMode.MODE_PUSH_CAP_BALL;
-                    break;
-                case MODE_PUSH_CAP_BALL:
                     currentMode = autoMode.MODE_SHOOT_ONLY;
                     break;
                 case MODE_SHOOT_ONLY:
-                    currentMode = autoMode.MODE_COLOR_TEST;
-                    break;
-                case MODE_COLOR_TEST:
-                    currentMode = autoMode.MODE_WHITE_LINE_TEST;
-                    break;
-                case MODE_WHITE_LINE_TEST:
                     currentMode = autoMode.MODE_DRIVE_BEACONS;
                     break;
             }
@@ -128,23 +113,15 @@ public class AutoStates extends BaseOp {
         }
         super.loop();
         // Telemetry block
-        telemetry.addLine()
-                .addData("Loop count", loopCounter)
-                .addData("State", mCurrentState);
-       // telemetry.addData("3", "Light detected: " + odSensor.getLightDetected());
+        //telemetry.addLine()
+               // .addData("Loop count", loopCounter)
+                //.addData("State", mCurrentState);
+                // telemetry.addData("3", "Light detected: " + odSensor.getLightDetected());
         switch (mCurrentState) {
             case STATE_INITIAL:
                 newState(STATE_FIRST_SHOT);
                 shooterTargetPosition -= 3360;
                 shooter.setTargetPosition(shooterTargetPosition);
-                break;
-
-            case STATE_MOVE_FROM_WALL:
-                speed = 0.2;
-                if (MecanumDrive(speed, rightMove(speed), rotationComp(), -1000)) {
-                    newState(STATE_FIRST_SHOT);
-                    MecanumDrive(0, 0, rotationComp(), 0);
-                }
                 break;
 
             case STATE_FIRST_SHOT:
@@ -262,7 +239,7 @@ public class AutoStates extends BaseOp {
 
             case STATE_CAP_DRIVE1:
                 speed = 1;
-                if (MecanumDrive(speed, isRed ? backwardMove(speed) : forwardMove(speed), rotationComp(), isRed ? 8000 : -10000)) {
+                if (MecanumDrive(speed, isRed ? backwardMove(speed) : forwardMove(speed), rotationComp(), isRed ? 8000 : -10500)) {
                     MecanumDrive(0, 0, rotationComp(), 0);
                     newState(isRed? STATE_DRIVE_FOR_PARK_RED : STATE_TURN_FOR_PARK);
                 }
@@ -320,6 +297,7 @@ public class AutoStates extends BaseOp {
         // Reset the state time, and then change to next state.
         mStateTime.reset();
         mCurrentState = newState;
+        telemetry.addData("State", mCurrentState);
     }
 
     public void driveSideways(int target) {
