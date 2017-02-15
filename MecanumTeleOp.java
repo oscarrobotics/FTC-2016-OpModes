@@ -10,20 +10,6 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 @com.qualcomm.robotcore.eventloop.opmode.TeleOp(name = "Oscar: Teleop Mecanum Tank", group = "Oscar")
 public class MecanumTeleOp extends BaseOp {
 
-    public long timeAtStart;
-
-    public enum State {
-        STATE_IDLE,
-        STATE_LOADING,
-        STATE_WAIT_TO_SHOOT,
-        STATE_LOADER_MOVE_DELAY,
-        STATE_INCREMENT_TARGET_POSITION,
-        STATE_RETURN_TO_IDLE
-    }
-
-    private ElapsedTime mStateTime = new ElapsedTime();  // Time into current state
-    private MecanumTeleOp.State mCurrentState;
-
     @Override
     public void init() {
         super.init();
@@ -32,8 +18,7 @@ public class MecanumTeleOp extends BaseOp {
     @Override
     public void start() {
         resetStartTime();
-        newState(State.STATE_IDLE);
-    }
+   }
 
     @Override
     public void init_loop() {
@@ -48,8 +33,6 @@ public class MecanumTeleOp extends BaseOp {
         Collect();
         Load();
         extendBeaconPress();
-
-        telemetry.addData("1", beaconPress.getPosition());
     }
 
     public void Shoot() {
@@ -77,11 +60,11 @@ public class MecanumTeleOp extends BaseOp {
         }
     }
 
-    private void newState(MecanumTeleOp.State newState) {
-        // Reset the state time, and then change to next state.
-        mStateTime.reset();
-        mCurrentState = newState;
-    }
+//    private void newState(MecanumTeleOp.State newState) {
+//        // Reset the state time, and then change to next state.
+//        mStateTime.reset();
+//        mCurrentState = newState;
+//    }
 
     private void extendBeaconPress() {
         boolean seeingRed = redBlueSensor.red() > redBlueSensor.blue() + colorSensorMargin;
@@ -108,8 +91,7 @@ public class MecanumTeleOp extends BaseOp {
         cdi.setLED(1, seeingRed);
         cdi.setLED(0, seeingBlue);
 
-        boolean correctColor = (lookingForRed && redBlueSensor.red() > redBlueSensor.blue() + colorSensorMargin) ||
-                (!lookingForRed && redBlueSensor.blue() > redBlueSensor.red() + colorSensorMargin);
+        boolean correctColor = (lookingForRed && seeingRed) || (!lookingForRed && seeingBlue);
 
         if (correctColor) {
             beaconPress.setPosition(extendServoPos);

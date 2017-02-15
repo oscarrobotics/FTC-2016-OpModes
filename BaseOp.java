@@ -72,7 +72,6 @@ public class BaseOp extends OpMode {
     public  boolean beaconEnabled = false;
     protected boolean isRed = false;
     protected boolean nearBeacon = false;
-    public final double LIGHT_SENSOR_VAL = 0.1;
     public long bringBackInAt = 0;
     public boolean lookingForRed = false; // 0 for blue, 1 for red
     public boolean toggleDebug = false; //toggles through the button presser states
@@ -216,9 +215,9 @@ public class BaseOp extends OpMode {
 
 
     public void loop() { // constantly running code
-        telemetry.addLine()
-                .addData("ShooterPos", shooter.getCurrentPosition())
-                .addData("Target", shooterTargetPosition);
+      //  telemetry.addLine()
+                //.addData("ShooterPos", shooter.getCurrentPosition())
+                //.addData("Target", shooterTargetPosition);
 
         angles = imu.getAngularOrientation().toAxesReference(AxesReference.INTRINSIC).toAxesOrder(AxesOrder.ZYX);
         currentGyroHeading = Math.abs(angles.firstAngle % 360.0);
@@ -331,9 +330,9 @@ public class BaseOp extends OpMode {
         telemetry.addLine()
                 .addData("4", "rotation", rotation);*/
 
-        telemetry.addLine()
-                .addData("Actual", leftFront.getCurrentPosition())
-                .addData("Dest", targetDestination);
+       // telemetry.addLine()
+                //.addData("Actual", leftFront.getCurrentPosition())
+                //.addData("Dest", targetDestination);
 
 
         final double v1 = speed * Math.cos(direction) + rotation;
