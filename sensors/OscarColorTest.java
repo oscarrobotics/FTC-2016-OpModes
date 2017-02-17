@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode.sensors;
 
 import com.qualcomm.hardware.ams.AMSColorSensor;
 import com.qualcomm.hardware.ams.AMSColorSensorImpl;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.I2cDevice;
 
@@ -10,6 +11,7 @@ import com.qualcomm.robotcore.hardware.I2cDevice;
  */
 
 @com.qualcomm.robotcore.eventloop.opmode.TeleOp(name = "Color Test", group = "Oscar")
+@Disabled
 public class OscarColorTest extends OpMode {
 
     AMSColorSensor redBlueSensor;

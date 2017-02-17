@@ -68,8 +68,7 @@ public class BaseOp extends OpMode {
     public final double servoExtend = .56;
     public final double servoOpposite = .28;
     public final double servoOppositeIn = .09;
-    public final double colorSensorMargin = 100;
-    public  boolean beaconEnabled = false;
+    public final double colorSensorMargin = 150;
     protected boolean isRed = false;
     protected boolean nearBeacon = false;
     public long bringBackInAt = 0;
@@ -78,9 +77,10 @@ public class BaseOp extends OpMode {
     public boolean leftBumperPressed = false;
     public static final int retractDelay = 200;
     public boolean zeroWasAdjusted = false;
-    public boolean beaaconEnabled = false;
+    public boolean beaconEnabled = false;
     public double safeServoPos = servoIn;
     public double extendServoPos = servoExtend;
+    public boolean servoFlipped = false;
     // Mecanum variables
     double speed = 0;
     double direction = 0;
@@ -283,18 +283,13 @@ public class BaseOp extends OpMode {
 
         // DPad drive
         if (gamepad1.dpad_up || gamepad1.dpad_down || gamepad1.dpad_left || gamepad1.dpad_right) {
-            beaconEnabled = true;
             if (gamepad1.dpad_up) { // forwards
-                safeServoPos = servoOppositeIn;
-                extendServoPos = servoOpposite;
                 speed = gamepad1.right_bumper?1.0: 0.3;
                 direction = Math.atan2(-speed, 0) - Math.PI / 4;
             } else if (gamepad1.dpad_right) { // right
                 speed = 0.7;
                 direction = Math.atan2(0, -speed) - Math.PI / 4;
             } else if (gamepad1.dpad_down) { // backwards
-                 safeServoPos = servoIn;
-                extendServoPos = servoExtend;
                 speed = gamepad1.right_bumper?1.0:.3;
                 direction = Math.atan2(speed, 0) - Math.PI / 4;
             } else { // left
@@ -305,7 +300,6 @@ public class BaseOp extends OpMode {
 
         // Joystick drive
         else {
-            beaaconEnabled = false;
             speed = Math.hypot(driveStickX, driveStickY);
             direction = Math.atan2(driveStickY, -driveStickX) - Math.PI / 4;
         }

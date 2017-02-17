@@ -33,6 +33,7 @@ public class MecanumTeleOp extends BaseOp {
         Collect();
         Load();
         extendBeaconPress();
+        flipServo();
     }
 
     public void Shoot() {
@@ -101,5 +102,20 @@ public class MecanumTeleOp extends BaseOp {
                 beaconPress.setPosition(safeServoPos);
             }
         }
+
+    }
+
+    private void flipServo (){
+        if (gamepad1.left_bumper && !servoFlipped){
+            if (safeServoPos == servoOppositeIn){
+                safeServoPos = servoIn;
+                extendServoPos = servoExtend;
+            } else if (safeServoPos == servoIn){
+                safeServoPos = servoOppositeIn;
+                extendServoPos = servoOpposite;
+            }
+        }
+
+        servoFlipped = gamepad1.left_bumper;
     }
 }

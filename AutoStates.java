@@ -95,7 +95,7 @@ public class AutoStates extends BaseOp {
 
     public void loop() {
         loopCounter++;
-        if (beaaconEnabled) {
+        if (beaconEnabled) {
             boolean extendBeaconPress = (isRed && redBlueSensor.blue() + colorSensorMargin < redBlueSensor.red() ||
                     (!isRed && redBlueSensor.blue() > redBlueSensor.red() + colorSensorMargin));
             if (extendBeaconPress) {
@@ -200,7 +200,7 @@ public class AutoStates extends BaseOp {
                 break;
 
             case STATE_DRIVE_FOR_BEACON1:
-                beaaconEnabled = true;
+                beaconEnabled = true;
                 speed = isRed? .25 : .3;
                 if (MecanumDrive(speed, isRed ? forwardMove(speed) : backwardMove(speed), rotationComp(), isRed? -1500 : 2000)) {
                     newState(STATE_DRIVE_IN_BETWEEN_BEACONS);
@@ -215,7 +215,7 @@ public class AutoStates extends BaseOp {
                 break;
 
             case STATE_DRIVE_FOR_BEACON2:
-                beaaconEnabled = true;
+                beaconEnabled = true;
                 speed = isRed?.25 : .3;
                 if (MecanumDrive(speed, isRed ? forwardMove(speed) : backwardMove(speed), rotationComp(),isRed? -1600 : 1600)) {
                     newState(STATE_DRIVE_AFTER_BEACONS);
@@ -223,7 +223,7 @@ public class AutoStates extends BaseOp {
                 break;
 
             case STATE_DRIVE_AFTER_BEACONS:
-                beaaconEnabled = false;
+                beaconEnabled = false;
                 speed = 1;
                 if (MecanumDrive(speed, isRed? forwardMove(speed) : backwardMove(speed), rotationComp(),isRed? -800 : 800)) {
                     newState(STATE_CAP_TURN1);
@@ -231,7 +231,7 @@ public class AutoStates extends BaseOp {
                 break;
 
             case STATE_CAP_TURN1:
-                beaaconEnabled = false;
+                beaconEnabled = false;
                 targetHeading = isRed ? 45 : 310;
                 MecanumDrive(0, 0, rotationComp(), 0);
                 newState(STATE_CAP_DRIVE1);

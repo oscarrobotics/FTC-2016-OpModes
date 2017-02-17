@@ -1,9 +1,11 @@
 package org.firstinspires.ftc.teamcode;
 
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.hardware.DcMotor;
 
 @com.qualcomm.robotcore.eventloop.opmode.TeleOp(name = "Oscar: AlignOp", group = "Oscar")
+@Disabled
 public class AlignOp extends BaseOp {
 
     public int v1, v2, v3, v4;
