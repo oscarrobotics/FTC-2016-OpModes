@@ -72,10 +72,10 @@ public class BaseOp extends OpMode {
     protected boolean isRed = false;
     protected boolean nearBeacon = false;
     public long bringBackInAt = 0;
-    public boolean lookingForRed = false; // 0 for blue, 1 for red
+    public boolean lookingForRed = false;
     public boolean toggleDebug = false; //toggles through the button presser states
     public boolean leftBumperPressed = false;
-    public static final int retractDelay = 200;
+    public static final int retractDelay = 250;
     public boolean zeroWasAdjusted = false;
     public boolean beaconEnabled = false;
     public double safeServoPos = servoIn;
