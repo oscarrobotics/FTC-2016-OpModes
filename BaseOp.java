@@ -3,6 +3,8 @@ package org.firstinspires.ftc.teamcode;
 import com.qualcomm.hardware.adafruit.BNO055IMU;
 import com.qualcomm.hardware.adafruit.JustLoggingAccelerationIntegrator;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
+import com.qualcomm.robotcore.hardware.AnalogInput;
+import com.qualcomm.robotcore.hardware.AnalogSensor;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorController;
@@ -10,6 +12,8 @@ import com.qualcomm.robotcore.hardware.DeviceInterfaceModule;
 import com.qualcomm.robotcore.hardware.OpticalDistanceSensor;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.ServoController;
+import com.qualcomm.robotcore.hardware.TouchSensor;
+import com.qualcomm.robotcore.hardware.UltrasonicSensor;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
@@ -46,9 +50,12 @@ public class BaseOp extends OpMode {
     // Servos
     Servo loader; // shooter loader servo
     Servo beaconPress; // beacon presser servo
+    Servo touchSensorServo;
 
     // Sensors
     ColorSensor redBlueSensor; // Adafruit RGBW sensor
+    TouchSensor touchSensor;
+
     //OpticalDistanceSensor odSensor; // Modern Robotics RGBW sensor
     BNO055IMU imu; // Gyro
     Orientation angles; // Gyro angles
@@ -81,6 +88,14 @@ public class BaseOp extends OpMode {
     public double safeServoPos = servoIn;
     public double extendServoPos = servoExtend;
     public boolean servoFlipped = false;
+    public int shooterRotation = 2240;
+    public int ultraSonicDistance = 22;
+    public int moveLeftValue = 0;
+    public final double touchSensorUp = .3;
+    public final double touchSensorDown = .9;
+    public int beaconColor = 0;
+    public int lastBeaconColor = 0;
+    public boolean passedBeacon = false;
     // Mecanum variables
     double speed = 0;
     double direction = 0;
@@ -123,7 +138,7 @@ public class BaseOp extends OpMode {
 
         // Motor block
         shooter = hardwareMap.dcMotor.get("shooter"); // Shooter Motor
-        shooter.setDirection(DcMotor.Direction.FORWARD);
+        shooter.setDirection(DcMotor.Direction.REVERSE);
         shooter.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         shooterTargetPosition = 0;
         shooter.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -162,6 +177,9 @@ public class BaseOp extends OpMode {
         beaconPress = hardwareMap.servo.get("beaconPress"); // beacon presser servo
         beaconPress.setPosition(servoIn);
 
+        touchSensorServo = hardwareMap.servo.get("touchSensorServo");
+        touchSensorServo.setPosition(touchSensorUp);
+
         // Sensor block
 
         /*redBlueSensor = (AMSColorSensorImpl)hardwareMap.colorSensor.get("redBlueSensor");
@@ -170,6 +188,8 @@ public class BaseOp extends OpMode {
 */
         //odSensor = hardwareMap.opticalDistanceSensor.get("odSensor");
         redBlueSensor = hardwareMap.colorSensor.get("redBlueSensor");
+
+        touchSensor = hardwareMap.touchSensor.get("touchSensor");
 
         // Gyro block
         BNO055IMU.Parameters parameters = new BNO055IMU.Parameters();
@@ -233,7 +253,7 @@ public class BaseOp extends OpMode {
         shooter.setPower(1.0);
        // shooter.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         if (!shooting && shooterReady()) { // if NOT SHOOTING but READY TO SHOOT
-            shooterTargetPosition -= 3360; // make our target to 1 full rotation
+            shooterTargetPosition -= shooterRotation; // make our target to 1 full rotation
             shooter.setTargetPosition(shooterTargetPosition); // set that target as above
             shooting = true;
             loading = false;

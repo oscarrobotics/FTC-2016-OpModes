@@ -24,6 +24,7 @@ public class AutoStates extends BaseOp {
         STATE_MOVE_LEFT,
         STATE_DRIVE_FOR_BEACON1,
         STATE_DRIVE_IN_BETWEEN_BEACONS,
+        STATE_DRIVE_LEFT2,
         STATE_DRIVE_FOR_BEACON2,
         STATE_DRIVE_AFTER_BEACONS,
         STATE_CAP_DRIVE1,
@@ -98,6 +99,15 @@ public class AutoStates extends BaseOp {
         if (beaconEnabled) {
             boolean extendBeaconPress = (isRed && redBlueSensor.blue() + colorSensorMargin < redBlueSensor.red() ||
                     (!isRed && redBlueSensor.blue() > redBlueSensor.red() + colorSensorMargin));
+            if (redBlueSensor.blue() + colorSensorMargin < redBlueSensor.red() || redBlueSensor.red() + colorSensorMargin < redBlueSensor.red()){
+                if (redBlueSensor.blue() + colorSensorMargin < redBlueSensor.red())
+                    beaconColor = 1;
+                if (redBlueSensor.red() + colorSensorMargin < redBlueSensor.blue())
+                    beaconColor = 2;
+            }
+            else {
+                beaconColor = 0;
+            }
             if (extendBeaconPress) {
                 beaconPress.setPosition(isRed ? servoOpposite : servoExtend);
                 bringBackInAt = System.currentTimeMillis() + retractDelay;
@@ -120,7 +130,7 @@ public class AutoStates extends BaseOp {
         switch (mCurrentState) {
             case STATE_INITIAL:
                 newState(STATE_FIRST_SHOT);
-                shooterTargetPosition -= 3360;
+                shooterTargetPosition -= shooterRotation;
                 shooter.setTargetPosition(shooterTargetPosition);
                 break;
 
@@ -140,7 +150,7 @@ public class AutoStates extends BaseOp {
             case STATE_WAIT_FOR_LOAD:
                 if (mStateTime.milliseconds() > 1250){
                     loader.setPosition(.15);
-                    shooterTargetPosition -= 3360;
+                    shooterTargetPosition -= shooterRotation;
                     shooter.setTargetPosition(shooterTargetPosition);
                     newState(STATE_SECOND_SHOT);
                 }
@@ -187,29 +197,55 @@ public class AutoStates extends BaseOp {
                 targetHeading = isRed ? 88 : 270;
                 MecanumDrive(0, 0, rotationComp(), 0);
                 if (gyroCloseEnough(3)) {
+                    touchSensorServo.setPosition(touchSensorDown);
                     newState(STATE_MOVE_LEFT);
                 }
                 break;
 
             case STATE_MOVE_LEFT:
                 speed = .7;
-                if (MecanumDrive(speed,leftMove(speed), rotationComp(),isRed? 700 : 500)) {
-                    MecanumDrive(0, 0, 0, 0);
+
+                if (MecanumDrive(speed,leftMove(speed), rotationComp(),10000) || touchSensor.isPressed()) {
+                    speed = .3;
+                    targetDestination = 0;
+                    MecanumDrive(speed, backwardMove(speed), rotationComp(), 10000);
+                    touchSensorServo.setPosition(touchSensorUp);
                     newState(STATE_DRIVE_FOR_BEACON1);
                 }
                 break;
 
             case STATE_DRIVE_FOR_BEACON1:
                 beaconEnabled = true;
-                speed = isRed? .25 : .3;
-                if (MecanumDrive(speed, isRed ? forwardMove(speed) : backwardMove(speed), rotationComp(), isRed? -1500 : 2000)) {
-                    newState(STATE_DRIVE_IN_BETWEEN_BEACONS);
+//                if (MecanumDrive(speed, isRed ? forwardMove(speed) : backwardMove(speed), rotationComp(), isRed? -1500 : 2000)) {
+//                    newState(STATE_DRIVE_IN_BETWEEN_BEACONS);
+//                }
+                if (lastBeaconColor != 0 && lastBeaconColor != beaconColor) {
+                    passedBeacon = true;
                 }
+                if (passedBeacon) {
+                    if (MecanumDrive(speed, isRed ? forwardMove(speed) : backwardMove(speed), rotationComp(), isRed ? -100 : 100)) {
+                        targetDestination = 0;
+                        MecanumDrive(0,0,0,0);
+                        newState(STATE_DRIVE_IN_BETWEEN_BEACONS);
+                    }
+                }
+                lastBeaconColor = beaconColor;
                 break;
 
             case STATE_DRIVE_IN_BETWEEN_BEACONS:
                 speed = 1;
                 if (MecanumDrive(speed, isRed ? forwardMove(speed) : backwardMove(speed), rotationComp(),isRed? -2700 : 2750)) {
+                    newState(STATE_DRIVE_FOR_BEACON2);
+                }
+                break;
+
+            case STATE_DRIVE_LEFT2:
+                speed = .7;
+
+                if (MecanumDrive(speed,leftMove(speed), rotationComp(),10000) || touchSensor.isPressed()) {
+                    targetDestination = 0;
+                    MecanumDrive(0, 0, 0, 0);
+                    touchSensorServo.setPosition(touchSensorUp);
                     newState(STATE_DRIVE_FOR_BEACON2);
                 }
                 break;
