@@ -9,6 +9,10 @@ import com.qualcomm.robotcore.util.ElapsedTime;
  */
 @com.qualcomm.robotcore.eventloop.opmode.TeleOp(name = "Oscar: Teleop Mecanum Tank", group = "Oscar")
 public class MecanumTeleOp extends BaseOp {
+    enum autoFireStates {FIRE_INIT, FIRE_SHOOT, FIRE_LOAD, FIRE_RETRACT}
+
+    autoFireStates shooterState = autoFireStates.FIRE_INIT;
+    private ElapsedTime shooterStateTime = new ElapsedTime();  // Time into current state
 
     @Override
     public void init() {
@@ -18,7 +22,7 @@ public class MecanumTeleOp extends BaseOp {
     @Override
     public void start() {
         resetStartTime();
-   }
+    }
 
     @Override
     public void init_loop() {
@@ -36,18 +40,53 @@ public class MecanumTeleOp extends BaseOp {
         flipServo();
     }
 
+    private void newShooterState(autoFireStates newState) {
+        shooterStateTime.reset();
+        shooterState = newState;
+        telemetry.addData("Shooter State", shooterState);
+        telemetry.addData("Auto fire target", shooterTargetPosition);
+    }
+
+    private void autoFire() {
+        switch (shooterState) {
+            case FIRE_INIT:
+                if (!shooter.isBusy()) {
+                    shooterTargetPosition -= shooterRotation; // make our target to 1 full rotation
+                    shooter.setTargetPosition(shooterTargetPosition); // set that target as above
+                    newShooterState(autoFireStates.FIRE_SHOOT);
+                }
+                break;
+            case FIRE_SHOOT:
+                if (!shooter.isBusy()) {
+                    loader.setPosition(loaderLoad); // load ball
+                    newShooterState(autoFireStates.FIRE_LOAD);
+                }
+                break;
+            case FIRE_LOAD:
+                if (shooterStateTime.milliseconds() > 1250) {
+                    loader.setPosition(loaderStatic);
+                    newShooterState(autoFireStates.FIRE_RETRACT);
+                }
+                break;
+            case FIRE_RETRACT:
+                newShooterState(autoFireStates.FIRE_INIT);
+                break;
+        }
+    }
+
     public void Shoot() {
         if (gamepad2.right_trigger > 0.5) { // If right trigger pressed
-            manualFire(); // fire
+            autoFire();
         }
     }
 
     public void Load() {
-        if (gamepad2.dpad_down) { // if dpad_down pressed
-            loader.setPosition(.5); // load ball
-        } else {
-            loader.setPosition(0.15); // move back to static position
-
+        if (shooterState == autoFireStates.FIRE_INIT) {
+            if (gamepad2.dpad_down) { // if dpad_down pressed
+                loader.setPosition(loaderLoad); // load ball
+            } else {
+                loader.setPosition(loaderStatic); // move back to static position
+            }
         }
     }
 
@@ -105,12 +144,12 @@ public class MecanumTeleOp extends BaseOp {
 
     }
 
-    private void flipServo (){
-        if (gamepad1.left_bumper && !servoFlipped){
-            if (safeServoPos == servoOppositeIn){
+    private void flipServo() {
+        if (gamepad1.left_bumper && !servoFlipped) {
+            if (safeServoPos == servoOppositeIn) {
                 safeServoPos = servoIn;
                 extendServoPos = servoExtend;
-            } else if (safeServoPos == servoIn){
+            } else if (safeServoPos == servoIn) {
                 safeServoPos = servoOppositeIn;
                 extendServoPos = servoOpposite;
             }

@@ -3,17 +3,13 @@ package org.firstinspires.ftc.teamcode;
 import com.qualcomm.hardware.adafruit.BNO055IMU;
 import com.qualcomm.hardware.adafruit.JustLoggingAccelerationIntegrator;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
-import com.qualcomm.robotcore.hardware.AnalogInput;
-import com.qualcomm.robotcore.hardware.AnalogSensor;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorController;
 import com.qualcomm.robotcore.hardware.DeviceInterfaceModule;
-import com.qualcomm.robotcore.hardware.OpticalDistanceSensor;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.ServoController;
 import com.qualcomm.robotcore.hardware.TouchSensor;
-import com.qualcomm.robotcore.hardware.UltrasonicSensor;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
@@ -80,8 +76,6 @@ public class BaseOp extends OpMode {
     protected boolean nearBeacon = false;
     public long bringBackInAt = 0;
     public boolean lookingForRed = false;
-    public boolean toggleDebug = false; //toggles through the button presser states
-    public boolean leftBumperPressed = false;
     public static final int retractDelay = 250;
     public boolean zeroWasAdjusted = false;
     public boolean beaconEnabled = false;
@@ -89,10 +83,11 @@ public class BaseOp extends OpMode {
     public double extendServoPos = servoExtend;
     public boolean servoFlipped = false;
     public int shooterRotation = 2240;
-    public int ultraSonicDistance = 22;
-    public int moveLeftValue = 0;
     public final double touchSensorUp = .3;
     public final double touchSensorDown = .9;
+    public final double loaderStatic = 0.15;
+    public final double loaderLoad = 0.5;
+
     public int beaconColor = 0;
     public int lastBeaconColor = 0;
     public boolean passedBeacon = false;
@@ -101,7 +96,6 @@ public class BaseOp extends OpMode {
     double direction = 0;
     double rotation = 0;
     int target = 0;
-    boolean doneDriving = false;
     int targetDestination = 0;
 
 
@@ -120,7 +114,6 @@ public class BaseOp extends OpMode {
     public double leftMove(double speed) {
         return Math.atan2(0, speed) - Math.PI / 4;
     }
-
 
 
     public void init() { // runs when any OpMode is initalized, sets up everything needed to run robot
@@ -172,7 +165,7 @@ public class BaseOp extends OpMode {
 
         // Servo block
         loader = hardwareMap.servo.get("loader"); // shooter loader servo
-        loader.setPosition(0.0); // TODO: Find right value for this
+        loader.setPosition(loaderStatic);
 
         beaconPress = hardwareMap.servo.get("beaconPress"); // beacon presser servo
         beaconPress.setPosition(servoIn);
@@ -229,15 +222,11 @@ public class BaseOp extends OpMode {
         nearBeacon = false;
     }
 
-    public void setRunMode() { // sets things specific to autonomous
-
-    }
-
 
     public void loop() { // constantly running code
-      //  telemetry.addLine()
-                //.addData("ShooterPos", shooter.getCurrentPosition())
-                //.addData("Target", shooterTargetPosition);
+        //  telemetry.addLine()
+        //.addData("ShooterPos", shooter.getCurrentPosition())
+        //.addData("Target", shooterTargetPosition);
 
         angles = imu.getAngularOrientation().toAxesReference(AxesReference.INTRINSIC).toAxesOrder(AxesOrder.ZYX);
         currentGyroHeading = Math.abs(angles.firstAngle % 360.0);
@@ -251,7 +240,7 @@ public class BaseOp extends OpMode {
 
     public void manualFire() { // Teleop particle shooting
         shooter.setPower(1.0);
-       // shooter.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        // shooter.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         if (!shooting && shooterReady()) { // if NOT SHOOTING but READY TO SHOOT
             shooterTargetPosition -= shooterRotation; // make our target to 1 full rotation
             shooter.setTargetPosition(shooterTargetPosition); // set that target as above
@@ -304,13 +293,13 @@ public class BaseOp extends OpMode {
         // DPad drive
         if (gamepad1.dpad_up || gamepad1.dpad_down || gamepad1.dpad_left || gamepad1.dpad_right) {
             if (gamepad1.dpad_up) { // forwards
-                speed = gamepad1.right_bumper?1.0: 0.3;
+                speed = gamepad1.right_bumper ? 1.0 : 0.3;
                 direction = Math.atan2(-speed, 0) - Math.PI / 4;
             } else if (gamepad1.dpad_right) { // right
                 speed = 0.7;
                 direction = Math.atan2(0, -speed) - Math.PI / 4;
             } else if (gamepad1.dpad_down) { // backwards
-                speed = gamepad1.right_bumper?1.0:.3;
+                speed = gamepad1.right_bumper ? 1.0 : .3;
                 direction = Math.atan2(speed, 0) - Math.PI / 4;
             } else { // left
                 speed = 0.7;
@@ -344,9 +333,9 @@ public class BaseOp extends OpMode {
         telemetry.addLine()
                 .addData("4", "rotation", rotation);*/
 
-       // telemetry.addLine()
-                //.addData("Actual", leftFront.getCurrentPosition())
-                //.addData("Dest", targetDestination);
+        // telemetry.addLine()
+        //.addData("Actual", leftFront.getCurrentPosition())
+        //.addData("Dest", targetDestination);
 
 
         final double v1 = speed * Math.cos(direction) + rotation;
