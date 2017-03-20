@@ -67,7 +67,7 @@ public class BaseOp extends OpMode {
     double rotStickX = 0;
     double driveStickY = 0;
     double driveStickX = 0;
-    public final double servoIn = .85;
+    public final double servoIn = .76;// was .85
     public final double servoExtend = .56;
     public final double servoOpposite = .28;
     public final double servoOppositeIn = .09;
@@ -87,10 +87,8 @@ public class BaseOp extends OpMode {
     public final double touchSensorDown = .9;
     public final double loaderStatic = 0.15;
     public final double loaderLoad = 0.5;
-
-    public int beaconColor = 0;
-    public int lastBeaconColor = 0;
-    public boolean passedBeacon = false;
+    boolean seeingRed = false;
+    boolean seeingBlue = false;
     // Mecanum variables
     double speed = 0;
     double direction = 0;
@@ -121,11 +119,11 @@ public class BaseOp extends OpMode {
         // Controller/Module block
         frontController = hardwareMap.dcMotorController.get("Motor Controller 1"); // serial AL00VXVX
         backController = hardwareMap.dcMotorController.get("Motor Controller 2"); // serial AL00VXRV
-        shooterController = hardwareMap.dcMotorController.get("Shooter Controller"); // TODO: Get serial and put it here
+        shooterController = hardwareMap.dcMotorController.get("Shooter Controller"); // serial A7008J9J
 
-        servoController = hardwareMap.servoController.get("Servo Controller 1"); // TODO: Get serial and put it here
+        servoController = hardwareMap.servoController.get("Servo Controller 1"); // serial  AL00VTKG
 
-        cdi = hardwareMap.deviceInterfaceModule.get("Device Interface Module 1"); // TODO: Get serial and put it here
+        cdi = hardwareMap.deviceInterfaceModule.get("Device Interface Module 1"); // serial AI02RLFX
         //cdi.setLED(1, true); // turn on Blue LED TODO: does this work?
 
 
@@ -356,13 +354,13 @@ public class BaseOp extends OpMode {
         }
     }
 
-    protected double rotationComp() {
+    protected double rotationComp(boolean isTurning) {
         double rotation = 0.0;
         double gyro = currentGyroHeading;
         double target = targetHeading;
         double posError = gyro - target;
         double epsilon = 2; // was 4
-        double minSpeed = 0.12;
+        double minSpeed = isTurning?.35f:.12; // was 0.12
         double maxSpeed = 1;
 
         if (Math.abs(posError) > 180) {
@@ -374,4 +372,10 @@ public class BaseOp extends OpMode {
         }
         return rotation;
     }
+
+    protected double rotationComp()
+    {
+        return rotationComp(false);
+    }
+
 }
