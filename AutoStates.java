@@ -12,6 +12,7 @@ public class AutoStates extends BaseOp {
     public double direction;
     public boolean dpadDownLastLoop = false;
     public boolean dpadUpLastLoop = false;
+    public int stateCounter = 0;
 
     public enum State { // Ideally, these stay in order of how we use them
         STATE_INITIAL,
@@ -24,6 +25,7 @@ public class AutoStates extends BaseOp {
         STATE_DRIVE_BACKWARDS2,
         STATE_TURN_45_2,
         STATE_MOVE_LEFT,
+        STATE_DRIVE_BACKWARDS_RED,
         STATE_DRIVE_TO_BEACON1,
         STATE_DRIVE_FOR_BEACON1,
         STATE_DRIVE_IN_BETWEEN_BEACONS,
@@ -193,14 +195,14 @@ public class AutoStates extends BaseOp {
                 targetHeading = isRed ? 45 : 313;
                 loader.setPosition(loaderLoad);
                 MecanumDrive(0, 0, rotationComp(true), 0);
-                if (gyroCloseEnough(3)) {
+                if (gyroCloseEnough(1)) {
                     newState(STATE_DRIVE_BACKWARDS2);
                 }
                 break;
 
             case STATE_DRIVE_BACKWARDS2:
                 speed = 1;
-                if (MecanumDrive(speed, isRed ? forwardMove(speed) : backwardMove(speed), rotationComp(), isRed ? -4900 : 5000)) {
+                if (MecanumDrive(speed, isRed ? forwardMove(speed) : backwardMove(speed), rotationComp(), isRed ? -5500 : 5000)) {
                     nearBeacon = true;
                     newState(STATE_TURN_45_2);
                     MecanumDrive(0, 0, rotationComp(), 0);
@@ -211,32 +213,46 @@ public class AutoStates extends BaseOp {
                 loader.setPosition(loaderStatic);
                 targetHeading = isRed ? 88 : 270;
                 MecanumDrive(0, 0, rotationComp(true), 0);
-                if (gyroCloseEnough(3)) {
+                if (gyroCloseEnough(1)) {
                     touchSensorServo.setPosition(touchSensorDown);
                     newState(STATE_MOVE_LEFT);
-                    shooterTargetPosition -= shooterRotation;
-                    shooter.setTargetPosition(shooterTargetPosition);
                 }
                 break;
 
             case STATE_MOVE_LEFT:
                 speed = .7;
 
-                if (MecanumDrive(speed, leftMove(speed), rotationComp(), isRed ? 1700 : 1500) || touchSensor.isPressed()) {
+                if (MecanumDrive(speed, isRed ? leftAndBack(speed) : leftMove(speed), rotationComp(), isRed ? 8000 : 1500) || touchSensor.isPressed()) {
                     if (touchSensor.isPressed()) wallSensorTriggered = true;
                     MecanumDrive(0, 0, 0, 0);
                     targetDestination = 0;
                     touchSensorServo.setPosition(touchSensorUp);
-                    newState(STATE_DRIVE_TO_BEACON1);
+                         if (!isRed) {
+                            shooterTargetPosition -= shooterRotation;
+                            shooter.setTargetPosition(shooterTargetPosition);
+                          }
+                    newState(isRed ? STATE_DRIVE_BACKWARDS_RED : STATE_DRIVE_TO_BEACON1);
+                }
+                break;
 
+            case STATE_DRIVE_BACKWARDS_RED:
+                speed = 1;
+
+                if (MecanumDrive(speed, backwardMove(speed), rotationComp(), 500)) {
+                    MecanumDrive(0, 0, 0, 0);
+                    newState(STATE_DRIVE_TO_BEACON1);
                 }
                 break;
 
             case STATE_DRIVE_TO_BEACON1:
                 speed = .25 + SlowBoost;
-                if (MecanumDrive(speed, isRed ? forwardMove(speed) : backwardMove(speed), rotationComp(), 1000) || (seeingRed || seeingBlue)) {
+                if (MecanumDrive(speed, isRed ? forwardMove(speed) : backwardMove(speed), rotationComp(), isRed ? -1000 : 1000) || (seeingRed || seeingBlue)) {
                     targetDestination = 0;
-                    MecanumDrive(0,0,0,0);
+                    MecanumDrive(0, 0, 0, 0);
+                    if (isRed) {
+                        shooterTargetPosition -= shooterRotation;
+                        shooter.setTargetPosition(shooterTargetPosition);
+                    }
                     newState(STATE_DRIVE_FOR_BEACON1);
 
                 }
@@ -246,7 +262,7 @@ public class AutoStates extends BaseOp {
                 beaconEnabled = true;
                 speed = isRed ? .25 : .3; // TODO: This can be faster if we're sure we're close to wall; can also change beacon servo range to be tighter
                 if (wallSensorTriggered) speed += SlowBoost;
-                if (MecanumDrive(speed, isRed ? forwardMove(speed) : backwardMove(speed), rotationComp(), isRed ? -1500 : 1200)) {
+                if (MecanumDrive(speed, isRed ? forwardMove(speed) : backwardMove(speed), rotationComp(), isRed ? -1200 : 1200)) {
                     targetDestination = 0;
                     MecanumDrive(0, 0, 0, 0);
                     newState(STATE_DRIVE_IN_BETWEEN_BEACONS);
@@ -304,7 +320,7 @@ public class AutoStates extends BaseOp {
                 break;
 
             case STATE_DRIVE_FOR_PARK_RED:
-                if (MecanumDrive(speed, forwardMove(speed), rotationComp(), -1350)) {
+                if (MecanumDrive(speed, forwardMove(speed), rotationComp(), -900)) {
                     MecanumDrive(0, 0, rotationComp(), 0);
                     newState(STATE_TURN_FOR_PARK);
                 }
@@ -314,13 +330,13 @@ public class AutoStates extends BaseOp {
                 speed = 1;
                 targetHeading = isRed ? 0 : 270;
                 MecanumDrive(0, 0, rotationComp(true), 0);
-                if (gyroCloseEnough(3))
+                if (gyroCloseEnough(1))
                     newState(STATE_DRIVE_FOR_PARK);
                 break;
 
             case STATE_DRIVE_FOR_PARK:
                 speed = 1;
-                if (MecanumDrive(speed, backwardMove(speed), rotationComp(), isRed ? -2000 : 2000)) {
+                if (MecanumDrive(speed, backwardMove(speed), rotationComp(), isRed ? 2000 : 2000)) {
                     MecanumDrive(0, 0, rotationComp(), 0);
                     newState(STATE_STOP);
                 }
@@ -340,6 +356,10 @@ public class AutoStates extends BaseOp {
         mStateTime.reset();
         mCurrentState = newState;
         telemetry.addData("State", mCurrentState);
+        stateCounter++;
+        cdi.setLED(0, false);
+        cdi.setLED(1, false);
+        cdi.setLED(stateCounter % 2, true);
     }
 
     public boolean gyroCloseEnough(double epsilon) {

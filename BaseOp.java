@@ -113,6 +113,10 @@ public class BaseOp extends OpMode {
         return Math.atan2(0, speed) - Math.PI / 4;
     }
 
+    public double leftAndBack(double speed) {
+        return Math.atan2((0.9*speed), speed) - Math.PI / 4;
+    }
+
 
     public void init() { // runs when any OpMode is initalized, sets up everything needed to run robot
 
