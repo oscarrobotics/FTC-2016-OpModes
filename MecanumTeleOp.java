@@ -32,6 +32,12 @@ public class MecanumTeleOp extends BaseOp {
     @Override
     public void loop() {
         super.loop();
+
+        boolean seeingRed = redBlueSensor.red() > redBlueSensor.blue() + colorSensorMargin;
+        boolean seeingBlue = redBlueSensor.blue() > redBlueSensor.red() + colorSensorMargin;
+        cdi.setLED(1, seeingRed);
+        cdi.setLED(0, seeingBlue);
+
         MecanumGamepadDrive();
         Shoot();
         Collect();
@@ -128,8 +134,8 @@ public class MecanumTeleOp extends BaseOp {
         if (gamepad2.y)
             lookingForRed = true;
 
-        cdi.setLED(1, seeingRed);
-        cdi.setLED(0, seeingBlue);
+//        cdi.setLED(1, seeingRed);
+//        cdi.setLED(0, seeingBlue);
 
         boolean correctColor = (lookingForRed && seeingRed) || (!lookingForRed && seeingBlue);
 

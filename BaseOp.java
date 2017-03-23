@@ -89,6 +89,7 @@ public class BaseOp extends OpMode {
     public final double loaderLoad = 0.5;
     boolean seeingRed = false;
     boolean seeingBlue = false;
+    public int shooterTime = 1500;
     // Mecanum variables
     double speed = 0;
     double direction = 0;
@@ -113,9 +114,7 @@ public class BaseOp extends OpMode {
         return Math.atan2(0, speed) - Math.PI / 4;
     }
 
-    public double leftAndBack(double speed) {
-        return Math.atan2((0.9*speed), speed) - Math.PI / 4;
-    }
+    public double leftAndBack(double speed) {return Math.atan2((0.25*speed), speed) - Math.PI / 4;}
 
 
     public void init() { // runs when any OpMode is initalized, sets up everything needed to run robot
