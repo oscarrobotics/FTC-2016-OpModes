@@ -33,8 +33,11 @@ public class MecanumTeleOp extends BaseOp {
     public void loop() {
         super.loop();
 
-        boolean seeingRed = redBlueSensor.red() > redBlueSensor.blue() + colorSensorMargin;
-        boolean seeingBlue = redBlueSensor.blue() > redBlueSensor.red() + colorSensorMargin;
+        int currentRed = redBlueSensor.red() - firstRed;
+        int currentBlue = redBlueSensor.blue() - firstBlue;
+
+        boolean seeingRed = currentRed > currentBlue + colorSensorMargin;
+        boolean seeingBlue = currentBlue > currentRed + colorSensorMargin;
         cdi.setLED(1, seeingRed);
         cdi.setLED(0, seeingBlue);
 
@@ -44,7 +47,7 @@ public class MecanumTeleOp extends BaseOp {
         Load();
         extendBeaconPress();
         flipServo();
-        //fixShooter();
+        fixShooter();
     }
 
     private void newShooterState(autoFireStates newState) {
@@ -89,7 +92,7 @@ public class MecanumTeleOp extends BaseOp {
 
     public void Load() {
         if (shooterState == autoFireStates.FIRE_INIT) {
-            if (gamepad2.dpad_down) { // if dpad_down pressed
+            if (gamepad2.dpad_right) { // if dpad_down pressed
                 loader.setPosition(loaderLoad); // load ball
             } else {
                 loader.setPosition(loaderStatic); // move back to static position
@@ -114,8 +117,8 @@ public class MecanumTeleOp extends BaseOp {
 //    }
 
     private void extendBeaconPress() {
-        boolean seeingRed = redBlueSensor.red() > redBlueSensor.blue() + colorSensorMargin;
-        boolean seeingBlue = redBlueSensor.blue() > redBlueSensor.red() + colorSensorMargin;
+        //boolean seeingRed = (redBlueSensor.red() > redBlueSensor.blue() + colorSensorMargin) && (redBlueSensor.red() >= beaconBrightness);
+        //boolean seeingBlue = (redBlueSensor.blue() > redBlueSensor.red() + colorSensorMargin) && (redBlueSensor.blue() >= beaconBrightness);
 //        if (gamepad2.left_bumper && !leftBumperPressed)
 //            if (beaconPress.getPosition() == servoIn) {
 //                beaconPress.setPosition(servoExtend);

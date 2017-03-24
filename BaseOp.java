@@ -71,7 +71,7 @@ public class BaseOp extends OpMode {
     public final double servoExtend = .56;
     public final double servoOpposite = .28;
     public final double servoOppositeIn = .09;
-    public final double colorSensorMargin = 150;
+    public final double colorSensorMargin = 100;
     protected boolean isRed = false;
     protected boolean nearBeacon = false;
     public long bringBackInAt = 0;
@@ -90,6 +90,9 @@ public class BaseOp extends OpMode {
     boolean seeingRed = false;
     boolean seeingBlue = false;
     public int shooterTime = 1500;
+    public int beaconBrightness = 700;
+    public int firstRed = 0; //MESSES WITH COLOR SENSOR
+    public int firstBlue = 0; //MESSES WITH COLOR SENSOR
     // Mecanum variables
     double speed = 0;
     double direction = 0;
@@ -221,6 +224,9 @@ public class BaseOp extends OpMode {
         telemetry.addData("Shooter Position", shooter.getCurrentPosition());
 
         nearBeacon = false;
+
+        firstRed = redBlueSensor.red();
+        firstBlue = redBlueSensor.blue();
     }
 
 
