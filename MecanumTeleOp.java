@@ -44,6 +44,7 @@ public class MecanumTeleOp extends BaseOp {
         Load();
         extendBeaconPress();
         flipServo();
+        //fixShooter();
     }
 
     private void newShooterState(autoFireStates newState) {
@@ -163,4 +164,21 @@ public class MecanumTeleOp extends BaseOp {
 
         servoFlipped = gamepad1.left_bumper;
     }
+
+    private void fixShooter() {
+        if (gamepad2.dpad_up) { // bring shooter up by 25 ticks
+            shooterTargetPosition = shooter.getCurrentPosition() + 25;
+            shooter.setTargetPosition(shooterTargetPosition);
+        }
+        if (gamepad2.dpad_down) { // bring shooter down by 25 ticks
+            shooterTargetPosition = shooter.getCurrentPosition() - 25;
+            shooter.setTargetPosition(shooterTargetPosition);
+        }
+        if ((!gamepad2.dpad_down && !gamepad2.dpad_up) && zeroWasAdjusted) {
+            shooterTargetPosition = 0;
+            shooter.setTargetPosition(shooterTargetPosition);
+        }
+        zeroWasAdjusted = (gamepad2.dpad_down || gamepad2.dpad_up);
+    }
+
 }

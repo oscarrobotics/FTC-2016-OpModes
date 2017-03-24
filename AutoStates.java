@@ -201,6 +201,7 @@ public class AutoStates extends BaseOp {
                 loader.setPosition(loaderLoad);
                 MecanumDrive(0, 0, rotationComp(true), 0);
                 if (gyroCloseEnough(1)) {
+                    nearBeacon = true;
                     newState(STATE_DRIVE_BACKWARDS2);
                 }
                 break;
@@ -208,7 +209,6 @@ public class AutoStates extends BaseOp {
             case STATE_DRIVE_BACKWARDS2:
                 speed = 1;
                 if (MecanumDrive(speed, isRed ? forwardMove(speed) : backwardMove(speed), rotationComp(), isRed ? -5500 : 5150)) {
-                    nearBeacon = true;
                     newState(STATE_TURN_45_2);
                     touchSensorServo.setPosition(touchSensorDown);
                     MecanumDrive(0, 0, rotationComp(), 0);
@@ -243,16 +243,16 @@ public class AutoStates extends BaseOp {
             case STATE_DRIVE_BACKWARDS_RED:
                 speed = 1;
 
-                if (MecanumDrive(speed, backwardMove(speed), rotationComp(), 1250) ) {
+                if (MecanumDrive(speed, backwardMove(speed), rotationComp(), 750) ) { // was 1250, drove too far
                     MecanumDrive(0, 0, 0, 0);
                     newState(STATE_DRIVE_BACKWARDS_RED2);
                 }
                 break;
 
             case STATE_DRIVE_BACKWARDS_RED2:
-                speed = 1;
+                speed = 0.25;
 
-                if (!seeingBlue && !seeingRed) {
+                if (MecanumDrive(speed, backwardMove(speed), rotationComp(), 1000) || (!seeingBlue && !seeingRed)) {
                     newState(STATE_DRIVE_TO_BEACON1);
                 }
                 break;
