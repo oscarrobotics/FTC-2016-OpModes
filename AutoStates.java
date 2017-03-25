@@ -109,15 +109,13 @@ public class AutoStates extends BaseOp {
         drivePower = 1.0;
         loader.setPosition(loaderStatic); // added to resolve loader servo not initialized properly - george
         beaconPress.setPosition(servoIn);
-        firstRed = redBlueSensor.red(); //MESSES WITH COLOR SENSOR
-        firstBlue = redBlueSensor.blue(); //MESSES WITH COLOR SENSOR
         // Init commands TODO: what am i?
         // init_loop();
     }
 
     public void loop() {
-        int currentRed = redBlueSensor.red() - firstRed;
-        int currentBlue = redBlueSensor.blue() - firstBlue;
+        int currentRed = redBlueSensor.red();
+        int currentBlue = redBlueSensor.blue();
 
         seeingBlue = (currentBlue > currentRed + colorSensorMargin);
         seeingRed = (currentBlue + colorSensorMargin < currentRed);
@@ -221,7 +219,7 @@ public class AutoStates extends BaseOp {
 
             case STATE_TURN_45_2:
                 loader.setPosition(loaderStatic);
-                targetHeading = isRed ? 88 : 270;
+                targetHeading = isRed ? 85 : 270;
                 MecanumDrive(0, 0, rotationComp(true), 0);
                 if (gyroCloseEnough(1)) {
                     newState(STATE_MOVE_LEFT);
@@ -283,7 +281,7 @@ public class AutoStates extends BaseOp {
 //                if (!seeingBlue && !seeingRed && wasSeeing) {
 //
 //                }
-                if (MecanumDrive(speed, isRed ? forwardMove(speed) : backwardMove(speed), rotationComp(), isRed ? -1200 : 1400)) { // was -1200 : 1200
+                if (MecanumDrive(speed, isRed ? forwardMove(speed) : backwardMove(speed), rotationComp(), isRed ? -1650 : 1650)) { // was -1200 : 1200
                     targetDestination = 0;
                     MecanumDrive(0, 0, 0, 0);
                     newState(STATE_DRIVE_IN_BETWEEN_BEACONS);
@@ -291,7 +289,7 @@ public class AutoStates extends BaseOp {
                 break;
 
             case STATE_DRIVE_IN_BETWEEN_BEACONS:
-                speed = 1;
+                speed = 0.5;
                 if (MecanumDrive(speed, isRed ? forwardMove(speed) : backwardMove(speed), rotationComp(), isRed ? -2900 : 2720)) { // was 2900
                     newState(STATE_DRIVE_FOR_BEACON2);
                 }
@@ -312,9 +310,9 @@ public class AutoStates extends BaseOp {
                 beaconEnabled = true;
                 speed = isRed ? .21 : .3;
                 if (wallSensorTriggered || SlowBoost < 0) speed += SlowBoost;
-                if (MecanumDrive(speed, isRed ? forwardMove(speed) : backwardMove(speed), rotationComp(), isRed ? -1700 : 1900)) {  // was 1700
+                if (MecanumDrive(speed, isRed ? forwardMove(speed) : backwardMove(speed), rotationComp(), isRed ? -2100 : 2100)) {  // was 1700
                     newState(STATE_DRIVE_AFTER_BEACONS);
-                }
+                }+++++++++++++++++++-99999999999999999999999999999999999999999----------------
                 break;
 
             case STATE_DRIVE_AFTER_BEACONS:

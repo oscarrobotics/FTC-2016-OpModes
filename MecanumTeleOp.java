@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode;
 
 
+import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 /**
@@ -33,8 +34,8 @@ public class MecanumTeleOp extends BaseOp {
     public void loop() {
         super.loop();
 
-        int currentRed = redBlueSensor.red() - firstRed;
-        int currentBlue = redBlueSensor.blue() - firstBlue;
+        int currentRed = redBlueSensor.red();
+        int currentBlue = redBlueSensor.blue();
 
         boolean seeingRed = currentRed > currentBlue + colorSensorMargin;
         boolean seeingBlue = currentBlue > currentRed + colorSensorMargin;
@@ -179,6 +180,8 @@ public class MecanumTeleOp extends BaseOp {
         }
         if ((!gamepad2.dpad_down && !gamepad2.dpad_up) && zeroWasAdjusted) {
             shooterTargetPosition = 0;
+            shooter.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+            shooter.setMode(DcMotor.RunMode.RUN_TO_POSITION);
             shooter.setTargetPosition(shooterTargetPosition);
         }
         zeroWasAdjusted = (gamepad2.dpad_down || gamepad2.dpad_up);
