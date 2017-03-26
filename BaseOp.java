@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode;
 
+import com.qualcomm.hardware.adafruit.BNO055IMU;
+import com.qualcomm.hardware.adafruit.JustLoggingAccelerationIntegrator;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -7,169 +9,245 @@ import com.qualcomm.robotcore.hardware.DcMotorController;
 import com.qualcomm.robotcore.hardware.DeviceInterfaceModule;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.ServoController;
-import com.qualcomm.robotcore.hardware.GyroSensor;
+import com.qualcomm.robotcore.hardware.TouchSensor;
+
+import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
+import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
+import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 
 /**
- * Created by Ultra on 9/29/2016.
+ * Created by Ultra on 9/29/2016
  * Edited by Jonathan on 11/4/2016
- * Edited by Banks T on 11/4/2016.
+ * Edited by Banks on 11/4/2016
+ * QUALIFIER 1: Duct Ties & Zip Tape
+ * Edited by George on 11/5/2016
+ * Edited by Chris on 11/5/2016
+ * Edited by Banks on 11/5/2016
+ * Edited by Banks on 11/9/2016
  */
 
 public class BaseOp extends OpMode {
 
     // Controllers
-    DcMotorController frontController;
-    DcMotorController backController;
-    DcMotorController shooterController;
-    ServoController servoController;
-    DeviceInterfaceModule cdi;
+    DcMotorController frontController; // Motor Controller 1
+    DcMotorController backController; // Motor Controller 2
+    DcMotorController shooterController; // Shooter Controller
+    ServoController servoController; // Servo Controller 1
+    DeviceInterfaceModule cdi; // Core Device Interface Module
 
     // Motors
     DcMotor rightFront;
     DcMotor rightBack;
     DcMotor leftFront;
     DcMotor leftBack;
-    DcMotor shooter;
-    DcMotor collector;
+    DcMotor shooter; // catapult motor
+    DcMotor collector; // spinny foam intake
 
     // Servos
-    Servo loader;
-    Servo buttonPress;
+    Servo loader; // shooter loader servo
+    Servo beaconPress; // beacon presser servo
+    Servo touchSensorServo;
 
     // Sensors
     ColorSensor redBlueSensor; // Adafruit RGBW sensor
-    //ColorSensor odSensor; // Modern Robotics RGBW sensor
-    GyroSensor gyro; // TODO: This is never initialized below
+    TouchSensor touchSensor;
+
+    //OpticalDistanceSensor odSensor; // Modern Robotics RGBW sensor
+    BNO055IMU imu; // Gyro
+    Orientation angles; // Gyro angles
 
     // Variables
     public int shooterTargetPosition = 0;
     public boolean shooting = false;
     public boolean loading = false;
-    public int particlesShot = 0;
+    public boolean isLeftHandDrive = true;
+    double lastKnownRotJoy = 0.0;
+    double targetHeading = 0.0;
+    double currentGyroHeading = 0.0;
+    double rotStickX = 0;
+    double driveStickY = 0;
+    double driveStickX = 0;
+    public final double servoIn = .76;// was .85
+    public final double servoExtend = .56;
+    public final double servoOpposite = .28;
+    public final double servoOppositeIn = .09;
+    public final double colorSensorMargin = 150;
+    protected boolean isRed = false;
+    protected boolean nearBeacon = false;
+    public long bringBackInAt = 0;
+    public boolean lookingForRed = false;
+    public static final int retractDelay = 250;
+    public boolean zeroWasAdjusted = false;
+    public boolean beaconEnabled = false;
+    public double safeServoPos = servoIn;
+    public double extendServoPos = servoExtend;
+    public boolean servoFlipped = false;
+    public int shooterRotation = 2240;
+    public final double touchSensorUp = .3;
+    public final double touchSensorDown = .9;
+    public final double loaderStatic = 0.15;
+    public final double loaderLoad = 0.5;
+    boolean seeingRed = false;
+    boolean seeingBlue = false;
+    public int shooterTime = 1500;
+
+    // Mecanum variables
+    double speed = 0;
+    double direction = 0;
+    double rotation = 0;
+    int target = 0;
+    int targetDestination = 0;
+
+
+    public double forwardMove(double speed) {
+        return Math.atan2(-speed, 0) - Math.PI / 4;
+    }
+
+    public double backwardMove(double speed) {
+        return Math.atan2(speed, 0) - Math.PI / 4;
+    }
+
+    public double rightMove(double speed) {
+        return Math.atan2(0, -speed) - Math.PI / 4;
+    }
+
+    public double leftMove(double speed) {
+        return Math.atan2(0, speed) - Math.PI / 4;
+    }
+
+    public double leftAndBack(double speed) {return Math.atan2((0.25*speed), speed) - Math.PI / 4;}
+
 
     public void init() { // runs when any OpMode is initalized, sets up everything needed to run robot
 
-        // Controller block
+        // Controller/Module block
         frontController = hardwareMap.dcMotorController.get("Motor Controller 1"); // serial AL00VXVX
-
         backController = hardwareMap.dcMotorController.get("Motor Controller 2"); // serial AL00VXRV
+        shooterController = hardwareMap.dcMotorController.get("Shooter Controller"); // serial A7008J9J
 
-        shooterController = hardwareMap.dcMotorController.get("Shooter controller"); //
+        servoController = hardwareMap.servoController.get("Servo Controller 1"); // serial  AL00VTKG
 
-        servoController = hardwareMap.servoController.get("Servo Controller 1");
-
-        cdi = hardwareMap.deviceInterfaceModule.get("Device Interface Module 1");
-        //cdi.setLED(1, true); // turn on Blue LED
+        cdi = hardwareMap.deviceInterfaceModule.get("Device Interface Module 1"); // serial AI02RLFX
+        //cdi.setLED(1, true); // turn on Blue LED TODO: does this work?
 
 
         // Motor block
         shooter = hardwareMap.dcMotor.get("shooter"); // Shooter Motor
-        shooter.setDirection(DcMotor.Direction.FORWARD);
+        shooter.setDirection(DcMotor.Direction.REVERSE);
         shooter.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        shooterTargetPosition = 0;
+        shooter.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        shooter.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        shooter.setPower(1.0);
+        shooter.setTargetPosition(0);
 
         collector = hardwareMap.dcMotor.get("collector"); // Spinny Foam Thing Motor
         collector.setDirection(DcMotor.Direction.REVERSE);
         collector.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
 
         rightFront = hardwareMap.dcMotor.get("rightFront");
-        rightFront.setDirection(DcMotor.Direction.REVERSE);
-        rightFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+        rightFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        rightFront.setDirection(DcMotor.Direction.FORWARD);
+        rightFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         rightBack = hardwareMap.dcMotor.get("rightBack");
-        rightBack.setDirection(DcMotor.Direction.REVERSE);
-        rightBack.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+        rightBack.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        rightBack.setDirection(DcMotor.Direction.FORWARD);
+        rightBack.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         leftFront = hardwareMap.dcMotor.get("leftFront");
-        leftFront.setDirection(DcMotor.Direction.FORWARD);
-        leftFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+        leftFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        leftFront.setDirection(DcMotor.Direction.REVERSE);
+        leftFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         leftBack = hardwareMap.dcMotor.get("leftBack");
-        leftBack.setDirection(DcMotor.Direction.FORWARD);
-        leftBack.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+        leftBack.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        leftBack.setDirection(DcMotor.Direction.REVERSE);
+        leftBack.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         // Servo block
-        loader = hardwareMap.servo.get("loader");
-        loader.setPosition(0.0);
+        loader = hardwareMap.servo.get("loader"); // shooter loader servo
+        loader.setPosition(loaderStatic);
 
-        buttonPress = hardwareMap.servo.get("buttonPress");
-        buttonPress.setPosition(90.0);
+        beaconPress = hardwareMap.servo.get("beaconPress"); // beacon presser servo
+        beaconPress.setPosition(servoIn);
 
+        touchSensorServo = hardwareMap.servo.get("touchSensorServo");
+        touchSensorServo.setPosition(touchSensorUp);
 
         // Sensor block
+
+        /*redBlueSensor = (AMSColorSensorImpl)hardwareMap.colorSensor.get("redBlueSensor");
+        AMSColorSensor.Parameters params = redBlueSensor.getParameters();
+        redBlueSensor.initialize(params);
+*/
+        //odSensor = hardwareMap.opticalDistanceSensor.get("odSensor");
         redBlueSensor = hardwareMap.colorSensor.get("redBlueSensor");
-        //redBlueSensor.enableLed(false); // disable LED by default
 
-        //odSensor = hardwareMap.colorSensor.get("odSensor");
-        //odSensor.enableLed(false); // disable LED by default
-        // TODO: Initialize ODS and Gyro
+        touchSensor = hardwareMap.touchSensor.get("touchSensor");
 
-        //gyro = hardwareMap.gyroSensor.get("Gyro");
+        // Gyro block
+        BNO055IMU.Parameters parameters = new BNO055IMU.Parameters();
+        parameters.angleUnit = BNO055IMU.AngleUnit.DEGREES;
+        parameters.accelUnit = BNO055IMU.AccelUnit.METERS_PERSEC_PERSEC;
+        parameters.calibrationDataFile = "AdafruitIMUCalibration.json"; // see the calibration sample opmode
+        parameters.loggingEnabled = false;
+        parameters.loggingTag = "IMU";
+        parameters.accelerationIntegrationAlgorithm = new JustLoggingAccelerationIntegrator();
+        imu = hardwareMap.get(BNO055IMU.class, "gyro");
 
+        telemetry.addData("1", "init");
+        imu.initialize(parameters);
+        telemetry.addData("1", "done");
     }
 
     @Override
-    public void init_loop() {
+    public void init_loop() { // runs after pressing INIT and loops until START pressed
         super.init_loop();
-        shooter.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-
-
-        if (gamepad2.a) {
-            shooter.setTargetPosition(shooter.getCurrentPosition() + 25);
-        }
-        if (gamepad2.y) {
-            shooter.setTargetPosition(shooter.getCurrentPosition() - 25);
-        }
-
-        if (gamepad1.start || gamepad2.start) { // zero encoder when 1 or 2 presses Start
-            shooter.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER); // TODO: Use gamepad buttons to move shooter one way or another and reset encoders
-
-        }
-        telemetry.addData("Shooter Position", shooter.getCurrentPosition());
-        telemetry.update();
-    }
-
-    public void setAutoRunMode() { // sets things specific to autonomous
-        rightFront.setMode(DcMotor.RunMode.RUN_TO_POSITION); // sets the encoders to the right mode, tells the motor to run to the position it is given
-        rightBack.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        leftFront.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        leftBack.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        shooter.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-    }
-
-    public void setTeleRunMode() { // sets things specific to teleop
-        rightFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER); // tells the motors to use encoders
-        rightBack.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        leftFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        leftBack.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        shooter.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        buttonPress.setPosition(.5);
-    }
-
-    public void ResetShooter() {
-        shooter.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER); // Zero encoder
-    }
-
-    public void loop()// constantly running code
-    {
-        telemetry.addData("ShooterEncoderTarget", shooterTargetPosition);
-        telemetry.addData("ShooterEncoderPosition", shooter.getCurrentPosition());
-        updateTelemetry(telemetry);
-
-    }
-
-    public boolean shooterReady() {
-        return shooter.getCurrentPosition() <= shooterTargetPosition + 10; // DO NOT TOUCH
-    }
-
-    public void shootParticle() {
-        shooter.setPower(1.0);
-        shooter.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        if (!shooting && shooterReady()) { // if NOT SHOOTING but READY TO SHOOT
-            shooterTargetPosition -= 3360;  // TODO: Reverse motor and go positive?
+        if (gamepad2.dpad_up) { // bring shooter up by 25 ticks
+            shooterTargetPosition = shooter.getCurrentPosition() + 25;
             shooter.setTargetPosition(shooterTargetPosition);
+        }
+        if (gamepad2.dpad_down) { // bring shooter down by 25 ticks
+            shooterTargetPosition = shooter.getCurrentPosition() - 25;
+            shooter.setTargetPosition(shooterTargetPosition);
+        }
+        if ((!gamepad2.dpad_down && !gamepad2.dpad_up) && zeroWasAdjusted) {
+            shooterTargetPosition = 0;
+            shooter.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+            shooter.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            shooter.setTargetPosition(shooterTargetPosition);
+        }
+        zeroWasAdjusted = (gamepad2.dpad_down || gamepad2.dpad_up);
+        telemetry.addData("Shooter Position", shooter.getCurrentPosition());
+
+        nearBeacon = false;
+    }
+
+
+    public void loop() { // constantly running code
+        //  telemetry.addLine()
+        //.addData("ShooterPos", shooter.getCurrentPosition())
+        //.addData("Target", shooterTargetPosition);
+
+        angles = imu.getAngularOrientation().toAxesReference(AxesReference.INTRINSIC).toAxesOrder(AxesOrder.ZYX);
+        currentGyroHeading = Math.abs(angles.firstAngle % 360.0);
+        ////telemetry.update();
+    }
+
+    public boolean shooterReady() { // DO NOT TOUCH
+        return !shooter.isBusy();
+        //return shooter.getCurrentPosition() <= shooterTargetPosition + 10; // DO NOT TOUCH
+    }
+
+    public void manualFire() { // Teleop particle shooting
+        shooter.setPower(1.0);
+        // shooter.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        if (!shooting && shooterReady()) { // if NOT SHOOTING but READY TO SHOOT
+            shooterTargetPosition -= shooterRotation; // make our target to 1 full rotation
+            shooter.setTargetPosition(shooterTargetPosition); // set that target as above
             shooting = true;
             loading = false;
-            // loader.setPosition(.15);
             telemetry.addData("getting ready to shoot", "");
         } else if (shooting && shooterReady() && !loading) { // IF SHOOTING and READY TO SHOOT
             loading = true;
@@ -185,23 +263,123 @@ public class BaseOp extends OpMode {
             loading = false;
             telemetry.addData("None of the Above", "");
         }
-
     }
 
-    public void loadParticle() {
-        loader.setPosition(.5);
-    }
+    protected void MecanumGamepadDrive() {
+        target = 0;
+        double maxIncrement = 100;
 
-    public void auto2Ball() {
-        shooter.setPower(1.0);
-        shooter.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        shooter.setTargetPosition(-3360); // Shoots 1 ball
-        particlesShot = 1; // we have shot 1 ball now
-        if(shooterReady()) {
-            loader.setPosition(0.5);
+        if (isLeftHandDrive) {
+            rotStickX = gamepad1.right_stick_x;
+            driveStickX = gamepad1.left_stick_x;
+            driveStickY = gamepad1.left_stick_y;
+        } else {
+            rotStickX = gamepad1.left_stick_x;
+            driveStickX = gamepad1.right_stick_x;
+            driveStickY = gamepad1.right_stick_y;
         }
-        loader.setPosition(0.15);
-        shooter.setTargetPosition(shooterTargetPosition - 3360);
+        rotStickX = Math.pow(rotStickX, 3);
 
+
+        if (rotStickX == 0 && lastKnownRotJoy != 0.0) {
+            targetHeading = currentGyroHeading;
+        }
+
+        lastKnownRotJoy = rotStickX;
+
+        if (rotStickX != 0) {
+            targetHeading = (currentGyroHeading + (maxIncrement * rotStickX)) % 360;
+        }
+
+
+        // DPad drive
+        if (gamepad1.dpad_up || gamepad1.dpad_down || gamepad1.dpad_left || gamepad1.dpad_right) {
+            if (gamepad1.dpad_up) { // forwards
+                speed = gamepad1.right_bumper ? 1.0 : 0.3;
+                direction = Math.atan2(-speed, 0) - Math.PI / 4;
+            } else if (gamepad1.dpad_right) { // right
+                speed = 0.7;
+                direction = Math.atan2(0, -speed) - Math.PI / 4;
+            } else if (gamepad1.dpad_down) { // backwards
+                speed = gamepad1.right_bumper ? 1.0 : .3;
+                direction = Math.atan2(speed, 0) - Math.PI / 4;
+            } else { // left
+                speed = 0.7;
+                direction = Math.atan2(0, speed) - Math.PI / 4;
+            }
+        }
+
+        // Joystick drive
+        else {
+            speed = Math.hypot(driveStickX, driveStickY);
+            direction = Math.atan2(driveStickY, -driveStickX) - Math.PI / 4;
+        }
+
+        MecanumDrive(speed, direction, rotation, target);
     }
+
+    protected boolean MecanumDrive(double speed, double direction, double rotation, int target) {
+
+        if (rotation == 0) {
+            rotation = rotationComp();
+        }
+
+
+        if (target != 0 && targetDestination == 0) {
+            targetDestination = leftFront.getCurrentPosition() + target;
+        }
+
+        /*telemetry.addLine()
+                .addData("3", "TargetHeading", targetHeading)
+                .addData("3", "ActualHeading", currentGyroHeading);
+        telemetry.addLine()
+                .addData("4", "rotation", rotation);*/
+
+        // telemetry.addLine()
+        //.addData("Actual", leftFront.getCurrentPosition())
+        //.addData("Dest", targetDestination);
+
+
+        final double v1 = speed * Math.cos(direction) + rotation;
+        final double v2 = speed * Math.sin(direction) - rotation;
+        final double v3 = speed * Math.sin(direction) + rotation;
+        final double v4 = speed * Math.cos(direction) - rotation;
+
+        leftFront.setPower(v1);
+        rightFront.setPower(v2);
+        leftBack.setPower(v3);
+        rightBack.setPower(v4);
+
+        if (targetDestination != 0 && Math.abs(leftFront.getCurrentPosition() - targetDestination) < 100) {
+            targetDestination = 0;
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    protected double rotationComp(boolean isTurning) {
+        double rotation = 0.0;
+        double gyro = currentGyroHeading;
+        double target = targetHeading;
+        double posError = gyro - target;
+        double epsilon = 2; // was 4
+        double minSpeed = isTurning?.35f:.12; // was 0.12
+        double maxSpeed = 1;
+
+        if (Math.abs(posError) > 180) {
+            posError = -360 * Math.signum(posError) + posError;
+        }
+        if (Math.abs(posError) > epsilon) {
+            rotation = minSpeed + (Math.abs(posError) / 180) * (maxSpeed - minSpeed);
+            rotation = rotation * Math.signum(posError);
+        }
+        return rotation;
+    }
+
+    protected double rotationComp()
+    {
+        return rotationComp(false);
+    }
+
 }

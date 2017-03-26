@@ -36,42 +36,12 @@ import android.graphics.Color;
 import android.view.View;
 
 import com.qualcomm.ftcrobotcontroller.R;
-import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DeviceInterfaceModule;
 import com.qualcomm.robotcore.hardware.DigitalChannelController;
 
-/*
- *
- * This is an example LinearOpMode that shows how to use
- * the Adafruit RGB Sensor.  It assumes that the I2C
- * cable for the sensor is connected to an I2C port on the
- * Core Device Interface Module.
- *
- * It also assuems that the LED pin of the sensor is connected
- * to the digital signal pin of a digital port on the
- * Core Device Interface Module.
- *
- * You can use the digital port to turn the sensor's onboard
- * LED on or off.
- *
- * The op mode assumes that the Core Device Interface Module
- * is configured with a name of "dim" and that the Adafruit color sensor
- * is configured as an I2C device with a name of "sensor_color".
- *
- * It also assumes that the LED pin of the RGB sensor
- * is connected to the signal pin of digital port #5 (zero indexed)
- * of the Core Device Interface Module.
- *
- * You can use the X button on gamepad1 to toggle the LED on and off.
- *
- * Use Android Studio to Copy this Class, and Paste it into your team's code folder with a new name.
- * Remove or comment out the @Disabled line to add this opmode to the Driver Station OpMode list
- */
-@Autonomous(name = "Sensor: AdafruitRGB", group = "Sensor")
-@Disabled                            // Comment this out to add to the opmode list
+@com.qualcomm.robotcore.eventloop.opmode.TeleOp(name = "Sensor: AdafruitRGB", group = "Oscar")
 public class SensorAdafruitRGB extends LinearOpMode {
 
   ColorSensor sensorRGB;
@@ -96,13 +66,13 @@ public class SensorAdafruitRGB extends LinearOpMode {
 
     // bPrevState and bCurrState represent the previous and current state of the button.
     boolean bPrevState = false;
-    boolean bCurrState = false;
+    boolean bCurrState;
 
     // bLedOn represents the state of the LED.
-    boolean bLedOn = true;
+    boolean bLedOn = false;
 
     // get a reference to our DeviceInterfaceModule object.
-    cdim = hardwareMap.deviceInterfaceModule.get("dim");
+    cdim = hardwareMap.deviceInterfaceModule.get("Device Interface Module 1");
 
     // set the digital channel to output mode.
     // remember, the Adafruit sensor is actually two devices.
@@ -110,7 +80,7 @@ public class SensorAdafruitRGB extends LinearOpMode {
     cdim.setDigitalChannelMode(LED_CHANNEL, DigitalChannelController.Mode.OUTPUT);
 
     // get a reference to our ColorSensor object.
-    sensorRGB = hardwareMap.colorSensor.get("sensor_color");
+    sensorRGB = hardwareMap.colorSensor.get("redBlueSensor");
 
     // turn the LED on in the beginning, just so user will know that the sensor is active.
     cdim.setDigitalChannelState(LED_CHANNEL, bLedOn);
@@ -126,7 +96,7 @@ public class SensorAdafruitRGB extends LinearOpMode {
       bCurrState = gamepad1.x;
 
       // check for button-press state transitions.
-      if ((bCurrState == true) && (bCurrState != bPrevState))  {
+      if ((bCurrState) && (bCurrState != bPrevState))  {
 
         // button is transitioning to a pressed state. Toggle the LED.
         bLedOn = !bLedOn;
